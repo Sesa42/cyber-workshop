@@ -12,48 +12,54 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Auto refresh ogni secondo per il timer
-st_refresh_count = st_autorefresh(interval=1000, key="timer")
+st_autorefresh(interval=1000, key="timer")
 
 # -----------------------------
-# CSS STYLE
+# CSS STYLE (Desktop Edition)
 # -----------------------------
 st.markdown("""
 <style>
-    :root {
-        --win11-radius: 14px;
-        --win11-accent: #0078d4;
-    }
-    /* Sfondo globale */
     .stApp {
         background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
         background-size: cover;
-        background-attachment: fixed;
     }
-    /* Effetto vetro sul contenitore principale */
     [data-testid="stAppViewContainer"] > .main {
-        background: rgba(18, 18, 20, 0.6);
-        backdrop-filter: blur(20px);
+        background: rgba(0, 0, 0, 0.3);
     }
-    /* Pannelli di stato */
-    .status-panel {
-        background: rgba(0, 0, 0, 0.5);
-        padding: 20px;
-        border-radius: var(--win11-radius);
+    /* Stile Icone Desktop */
+    .desktop-icon-container {
         text-align: center;
-        border: 1px solid rgba(255,255,255,0.1);
         margin-bottom: 20px;
+        transition: transform 0.2s;
     }
-    /* Box contenuto bianco (Fix per visualizzazione) */
-    .main-content {
-        background: white;
-        padding: 30px;
-        border-radius: var(--win11-radius);
-        color: #1c1c1c !important;
+    .desktop-icon-container:hover {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
     }
-    /* Forza colore testo scuro dentro il box bianco */
-    .main-content p, .main-content h1, .main-content h2, .main-content h3, .main-content label {
-        color: #1c1c1c !important;
+    .icon-text {
+        color: white;
+        font-size: 14px;
+        text-shadow: 1px 1px 3px black;
+        margin-top: 5px;
+    }
+    /* Finestra App */
+    .window-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 25px;
+        color: #1a1a1a !important;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        border-top: 30px solid #e0e0e0; /* Simula barra titolo */
+        position: relative;
+    }
+    .window-container * { color: #1a1a1a !important; }
+    
+    .status-panel {
+        background: rgba(0,0,0,0.6);
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.2);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -61,109 +67,118 @@ st.markdown("""
 # -----------------------------
 # SESSION STATE
 # -----------------------------
-if "resilience" not in st.session_state:
-    st.session_state.resilience = 100
-if "hacked" not in st.session_state:
-    st.session_state.hacked = False
-if "logs" not in st.session_state:
-    st.session_state.logs = []
-if "remaining" not in st.session_state:
-    st.session_state.remaining = 180
-if "last_update" not in st.session_state:
-    st.session_state.last_update = time.time()
+if "resilience" not in st.session_state: st.session_state.resilience = 100
+if "logs" not in st.session_state: st.session_state.logs = []
+if "current_app" not in st.session_state: st.session_state.current_app = None # Nessuna app aperta all'inizio
+if "remaining" not in st.session_state: st.session_state.remaining = 180
+if "last_update" not in st.session_state: st.session_state.last_update = time.time()
 
-# -----------------------------
-# TIMER LOGIC
-# -----------------------------
+# Timer Logic
 now = time.time()
-delta = now - st.session_state.last_update
-if delta >= 1:
-    st.session_state.remaining = max(0, st.session_state.remaining - int(delta))
+if (now - st.session_state.last_update) >= 1:
+    st.session_state.remaining = max(0, st.session_state.remaining - 1)
     st.session_state.last_update = now
 
-remaining = st.session_state.remaining
-attack_progress = int((180 - remaining)/180 * 100)
+# -----------------------------
+# TOP BAR (Status)
+# -----------------------------
+c1, c2, c3 = st.columns([2, 2, 1])
+with c1:
+    st.markdown(f'<div class="status-panel"><h4 style="color:white;margin:0;">⏳ TEMPO: {st.session_state.remaining}s</h4></div>', unsafe_allow_html=True)
+with c2:
+    color = "#00ff00" if st.session_state.resilience > 50 else "#ff4b4b"
+    st.markdown(f'<div class="status-panel"><h4 style="color:white;margin:0;">🛡️ SICUREZZA: <span style="color:{color};">{st.session_state.resilience}%</span></h4></div>', unsafe_allow_html=True)
+with c3:
+    if st.button("🏠 DESKTOP"):
+        st.session_state.current_app = None
+        st.rerun()
 
-if remaining <= 0:
-    st.session_state.hacked = True
-
-# Eventi casuali
-if random.random() < 0.05:
-    st.session_state.logs.append(f"⚠️ {time.strftime('%H:%M:%S')} - Suspicious traffic detected")
+st.progress(int((180 - st.session_state.remaining)/180 * 100))
 
 # -----------------------------
-# UI HEADER
+# DESKTOP ICONS (Visualizzate solo se nessuna app è aperta)
 # -----------------------------
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown(f'<div class="status-panel"><h3 style="color:white;">⏳ TEMPO RIMASTO: {remaining}s</h3></div>', unsafe_allow_html=True)
-with col2:
-    score = st.session_state.resilience
-    color = "#00ff00" if score > 50 else "#ff4b4b"
-    st.markdown(f'<div class="status-panel"><h3 style="color:white;">🛡️ RESILIENZA: <span style="color:{color};">{score}%</span></h3></div>', unsafe_allow_html=True)
-
-st.write("### 🔐 Encryption Progress")
-st.progress(attack_progress)
-
-# -----------------------------
-# HACKED SCREEN
-# -----------------------------
-if st.session_state.hacked:
-    st.markdown("""
-        <div style="background-color:#a80000; padding:50px; border-radius:15px; text-align:center; margin-bottom:20px;">
-            <h1 style="color:white !important;">🚨 SYSTEM BREACH 🚨</h1>
-            <p style="color:white !important;">Ransomware encryption complete. Your files are locked.</p>
-        </div>
-    """, unsafe_allow_html=True)
+if st.session_state.current_app is None:
+    st.write("##") # Spazio superiore
+    col_ic1, col_ic2, col_ic3, col_ic4 = st.columns(4)
     
-    st.metric("Final Security Score", f"{score}%")
-    
-    if st.button("RESTART SYSTEM"):
-        st.session_state.resilience = 100
-        st.session_state.hacked = False
-        st.session_state.remaining = 180
-        st.session_state.last_update = time.time()
-        st.session_state.logs = []
-        st.rerun() # Forza il refresh immediato
-    st.stop()
+    with col_ic1:
+        st.markdown('<div class="desktop-icon-container"><h1>📧</h1><p class="icon-text">Outlook</p></div>', unsafe_allow_html=True)
+        if st.button("Apri Outlook", key="btn_mail"): 
+            st.session_state.current_app = "Outlook"
+            st.rerun()
+
+    with col_ic2:
+        st.markdown('<div class="desktop-icon-container"><h1>🛡️</h1><p class="icon-text">Defender</p></div>', unsafe_allow_html=True)
+        if st.button("Apri Defender", key="btn_def"): 
+            st.session_state.current_app = "Defender"
+            st.rerun()
+
+    with col_ic3:
+        st.markdown('<div class="desktop-icon-container"><h1>🔑</h1><p class="icon-text">MFA</p></div>', unsafe_allow_html=True)
+        if st.button("Apri MFA", key="btn_mfa"): 
+            st.session_state.current_app = "MFA"
+            st.rerun()
+
+    with col_ic4:
+        st.markdown('<div class="desktop-icon-container"><h1>🎯</h1><p class="icon-text">Quiz</p></div>', unsafe_allow_html=True)
+        if st.button("Apri Quiz", key="btn_quiz"): 
+            st.session_state.current_app = "Quiz"
+            st.rerun()
 
 # -----------------------------
-# APPLICATION AREA
+# APP WINDOW (Visualizzata solo se un'app è selezionata)
 # -----------------------------
-app = st.selectbox(
-    "Select Application:",
-    ["📧 Outlook Mail", "🛡️ Defender", "⚙️ Settings", "📊 Dashboard"],
-    label_visibility="collapsed"
-)
-
-# Uso di st.container() per simulare il box bianco senza rompere il layout
-with st.container():
-    st.markdown('<div class="main-content">', unsafe_allow_html=True)
+else:
+    st.markdown('<div class="window-container">', unsafe_allow_html=True)
     
-    if app == "📧 Outlook Mail":
-        st.subheader("📧 Outlook Web")
-        st.info("Incoming: 'Urgent: Payment Declined' from security@microsoft-office.net")
-        c1, c2 = st.columns(2)
-        if c1.button("Verify Now"):
-            st.session_state.resilience = max(0, st.session_state.resilience - 40)
-            st.session_state.logs.append("❌ PHISHED! User clicked phishing link")
-        if c2.button("Report Phishing"):
-            st.session_state.resilience = min(100, st.session_state.resilience + 10)
-            st.session_state.logs.append("✔ Phishing email reported")
+    curr = st.session_state.current_app
+    
+    if curr == "Outlook":
+        st.subheader("📧 Outlook Web App")
+        st.write("Hai ricevuto un'email sospetta: *'Vincita iPhone 15!'*")
+        if st.button("Clicca sul link"):
+            st.session_state.resilience -= 20
+            st.session_state.logs.append("❌ Errore: Cliccato link malevolo")
+            st.rerun()
+        if st.button("Segnala come Phishing"):
+            st.session_state.resilience = min(100, st.session_state.resilience + 5)
+            st.session_state.logs.append("✅ Successo: Phishing segnalato")
+            st.rerun()
 
-    elif app == "🛡️ Defender":
+    elif curr == "Defender":
         st.subheader("🛡️ Windows Defender")
-        st.write("Scansione in corso...")
-        if st.button("Esegui scansione completa"):
-            st.session_state.logs.append("🔍 Scansione manuale avviata")
-            st.success("Nessuna minaccia immediata trovata (falso positivo?)")
+        st.write("Stato scansione: 1 minaccia potenziale trovata.")
+        if st.button("Quarantena File"):
+            st.session_state.resilience = min(100, st.session_state.resilience + 10)
+            st.session_state.logs.append("✅ Defender: Trojan rimosso")
+            st.rerun()
+
+    elif curr == "MFA":
+        st.subheader("🔑 Microsoft Authenticator")
+        st.warning("Richiesta di login da Pechino (IP: 103.x.x.x)")
+        if st.button("NEGA ACCESSO"):
+            st.session_state.resilience = min(100, st.session_state.resilience + 15)
+            st.session_state.logs.append("✅ MFA: Attacco respinto")
+            st.rerun()
+
+    elif curr == "Quiz":
+        st.subheader("🎯 Security Awareness Quiz")
+        ans = st.radio("Qual è la password più sicura?", ["123456", "Password!", "C4v4ll0_B14nc0!"])
+        if st.button("Invia Risposta"):
+            if ans == "C4v4ll0_B14nc0!":
+                st.session_state.resilience = min(100, st.session_state.resilience + 10)
+                st.success("Ottimo!")
+            else:
+                st.session_state.resilience -= 10
+            st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
 # -----------------------------
-# SOC LOG (In basso, fuori dal box bianco)
+# LOGS
 # -----------------------------
 st.write("---")
-st.write("### 📜 Security Log")
-for log in reversed(st.session_state.logs[-5:]):
-    st.write(f"• {log}")
+with st.expander("📜 Visualizza Log di Sistema (SOC)"):
+    for log in reversed(st.session_state.logs[-5:]):
+        st.write(log)
