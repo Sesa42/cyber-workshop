@@ -1,86 +1,129 @@
 import streamlit as st
 
-st.set_page_config(page_title="42 Hub - Microsoft 365 Simulator", layout="wide")
+st.set_page_config(page_title="Windows 11 Cyber Simulator", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CSS PER L'IMMERSIONE (STILE MICROSOFT) ---
+# --- CUSTOM CSS: WINDOWS 11 LOOK & FEEL ---
 st.markdown("""
     <style>
-    .ms-header { background-color: #0078d4; padding: 10px; color: white; display: flex; align-items: center; }
-    .ms-sidebar { background-color: #f3f2f1; border-right: 1px solid #edebe9; height: 100vh; }
-    .email-item { padding: 10px; border-bottom: 1px solid #edebe9; cursor: pointer; background: white; }
-    .email-item:hover { background-color: #f3f2f1; }
-    .unread { border-left: 4px solid #0078d4; font-weight: bold; }
-    .ms-card { background: white; padding: 20px; border: 1px solid #edebe9; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .main { background: linear_gradient(to bottom, #0078d4, #001e36); background-attachment: fixed; }
+    .stApp { background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg"); background-size: cover; }
+    
+    /* Window Style */
+    .win-window {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 20px;
+        color: #1a1a1a;
+        min-height: 500px;
+    }
+    
+    /* Taskbar Style */
+    .taskbar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        background: rgba(243, 243, 243, 0.8);
+        backdrop-filter: blur(10px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .task-icon { margin: 0 15px; cursor: pointer; width: 32px; transition: 0.2s; }
+    .task-icon:hover { transform: scale(1.2); }
     </style>
     """, unsafe_allow_html=True)
 
-# --- NAVIGAZIONE ---
-with st.sidebar:
-    st.title("42 Creative Hub")
-    st.subheader("Training Environment")
-    app_mode = st.selectbox("Switch Application:", ["Outlook (Email)", "OneDrive (Files)", "Admin Center (MFA)"])
-    st.divider()
-    st.progress(45, text="Security Readiness: 45%")
+# --- STATE MANAGEMENT (SCORE & PROGRESS) ---
+if 'score' not in st.session_state:
+    st.session_state.score = 100
+if 'completed' not in st.session_state:
+    st.session_state.completed = []
 
-# --- 1. SIMULATORE OUTLOOK ---
-if app_mode == "Outlook (Email)":
-    st.markdown('<div class="ms-header">Outlook Web</div>', unsafe_allow_html=True)
-    
-    col_list, col_content = st.columns([1, 2])
-    
-    with col_list:
-        st.markdown('<div class="email-item unread"><b>Microsoft Security</b><br><small>Action Required...</small></div>', unsafe_allow_html=True)
-        st.markdown('<div class="email-item"><b>HR Department</b><br><small>Holiday Calendar 2026</small></div>', unsafe_allow_html=True)
-        st.markdown('<div class="email-item"><b>Invoices Team</b><br><small>Invoice #88293 Pending</small></div>', unsafe_allow_html=True)
+# --- HEADER: SCORE & STATUS ---
+col_s1, col_s2 = st.columns([4, 1])
+with col_s2:
+    st.metric("Resilience Score", f"{st.session_state.score}/100")
 
-    with col_content:
-        st.markdown("""
-        <div class="ms-card">
-            <h3>Urgent: Your Microsoft 365 subscription has expired</h3>
-            <p><strong>From:</strong> microsoft-support@office-billing-secure.com</p>
-            <hr>
-            <p>Dear Administrator,<br>Your access to Microsoft 365 services has been suspended due to a billing error.</p>
-            <p>Please update your payment method immediately to restore your files.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        action = st.radio("What is your move?", ["Click the 'Update Now' button", "Check the sender's email address", "Forward to IT Support"])
-        if st.button("Confirm Action"):
-            if "sender" in action:
-                st.success("🎯 Correct! The domain 'office-billing-secure.com' is NOT an official Microsoft domain.")
-            elif "Click" in action:
-                st.error("🚨 CRITICAL ERROR: You just entered your credit card on a phishing site.")
+# --- NAVIGATION MENU (TASKBAR SIMULATION) ---
+menu = st.selectbox("Switch App:", ["🏠 Desktop / Start", "📧 Outlook", "📂 File Explorer", "🔐 Security Center"], label_visibility="collapsed")
 
-# --- 2. SIMULATORE ONEDRIVE ---
-elif app_mode == "OneDrive (Files)":
-    st.markdown('<div class="ms-header" style="background-color: #2b579a;">OneDrive for Business</div>', unsafe_allow_html=True)
-    st.write("### My Files")
+# --- 1. DESKTOP / START ---
+if menu == "🏠 Desktop / Start":
+    st.markdown('<div class="win-window"><h1>Welcome to Windows 11</h1><p>Select an app from the dropdown to start your Cyber Readiness audit.</p></div>', unsafe_allow_html=True)
+
+# --- 2. OUTLOOK (PHISHING SCENARIOS) ---
+elif menu == "📧 Outlook":
+    st.markdown('<div class="win-window"><h2>Outlook Web</h2>', unsafe_allow_html=True)
+    scenario = st.radio("Select Email to Review:", ["Email 1: IT Support", "Email 2: Unpaid Invoice", "Email 3: CEO Message"])
     
-    # Tabella file immersiva
+    if scenario == "Email 1: IT Support":
+        st.info("**From:** admin@m-office365-security.com\n\n**Subject:** MFA Verification Required")
+        st.write("Click here to re-enable your account.")
+        choice = st.button("Click Link & Login")
+        if choice:
+            st.session_state.score -= 20
+            st.error("❌ WRONG: The domain 'm-office365-security.com' is fake. -20 Points.")
+            
+    elif scenario == "Email 2: Unpaid Invoice":
+        st.info("**From:** accounts@real-vendor.com\n\n**Subject:** Invoice_9921.zip")
+        st.write("Please find the attached invoice for last month.")
+        choice = st.button("Download & Open ZIP")
+        if choice:
+            st.session_state.score -= 30
+            st.error("🚨 MALWARE: ZIP files from unexpected emails often contain ransomware. -30 Points.")
+
+    elif scenario == "Email 3: CEO Message":
+        st.info("**From:** serena.ceo.42@gmail.com\n\n**Subject:** Quick favor")
+        st.write("I'm in a meeting. Can you buy 5 Amazon gift cards for a client?")
+        choice = st.button("Reply & Ask for details")
+        if choice:
+            st.session_state.score -= 25
+            st.error("⚠️ BEC ATTACK: Business Email Compromise. Your CEO would never use Gmail for this. -25 Points.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- 3. FILE EXPLORER (DATA GOVERNANCE) ---
+elif menu == "📂 File Explorer":
+    st.markdown('<div class="win-window"><h2>OneDrive - 42 Creative Hub</h2>', unsafe_allow_html=True)
+    
     files = [
-        {"name": "Client_Database_2026.xlsx", "sharing": "Public Link 🌐", "risk": "High"},
-        {"name": "Internal_Procedures.pdf", "sharing": "Private 🔒", "risk": "Low"},
-        {"name": "CEO_Personal_Notes.docx", "sharing": "Public Link 🌐", "risk": "Critical"}
+        {"name": "Client_List_Confidential.csv", "perm": "Public Link", "action": "Restrict Access"},
+        {"name": "Meeting_Notes.docx", "perm": "Private", "action": "Share Publicly"},
+        {"name": "Company_Bank_Details.xlsx", "perm": "Anyone with link", "action": "Restrict Access"}
     ]
     
-    for f in files:
-        with st.expander(f"{f['name']} - Current Sharing: {f['sharing']}"):
-            st.write(f"Risk Level: {f['risk']}")
-            if "Public" in f['sharing']:
-                if st.button(f"Revoke Public Link for {f['name']}"):
-                    st.success("Link disabled. File is now Private.")
+    for i, f in enumerate(files):
+        c1, c2, c3 = st.columns([2, 1, 1])
+        c1.write(f"📄 {f['name']}")
+        c2.write(f"Status: {f['perm']}")
+        if c3.button("Execute Action", key=f"btn_{i}"):
+            if "Restrict" in f['action']:
+                st.success("✅ Secure! Access restricted. +10 Points.")
+                st.session_state.score += 10
+            else:
+                st.error("❌ Vulnerability Created! You just made a file public. -15 Points.")
+                st.session_state.score -= 15
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 3. ADMIN CENTER (MFA) ---
-elif app_mode == "Admin Center (MFA)":
-    st.markdown('<div class="ms-header" style="background-color: #000000;">Microsoft 365 Admin Center</div>', unsafe_allow_html=True)
-    st.write("### Active User Sessions")
+# --- 4. SECURITY CENTER (INCIDENT RESPONSE) ---
+elif menu == "🔐 Security Center":
+    st.markdown('<div class="win-window"><h2>Windows Security - Active Alerts</h2>', unsafe_allow_html=True)
+    st.warning("Critical Alert: Unusual login from St. Petersburg, Russia")
     
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.info("User: Serena Saraniti\n\nDevice: iPhone 15\n\nLocation: Dublin, Ireland")
-        st.button("Verify Identity", key="v1")
-        
-    with col_b:
-        st.error("User: Serena Saraniti\n\nDevice: Unknown Linux PC\n\nLocation: Kiev, Ukraine")
-        if st.button("REVOKE SESSION", key="v2"):
-            st.success("Session Terminated. User prompted for MFA password reset.")
+    response = st.selectbox("Immediate Action:", ["Ignore", "Call Employee", "Disable Account & Force Password Reset", "Wait for IT"])
+    if st.button("Confirm Response"):
+        if "Disable" in response:
+            st.success("🏆 CORRECT! Containment is the first priority. Security Score Improved.")
+            st.session_state.score += 20
+        else:
+            st.error("❌ TOO SLOW: The attacker has now encrypted your files. -40 Points.")
+            st.session_state.score -= 40
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- FOOTER ---
+st.markdown("<br><br><p style='text-align: center; color: white;'>42 Creative Hub Cyber Resilience Sandbox v2.0</p>", unsafe_allow_html=True)
