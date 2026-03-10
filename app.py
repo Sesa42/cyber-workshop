@@ -2,128 +2,162 @@ import streamlit as st
 
 st.set_page_config(page_title="Windows 11 Cyber Simulator", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CUSTOM CSS: WINDOWS 11 LOOK & FEEL ---
+# --- CSS: FIXED READABILITY & WIN11 STYLE ---
 st.markdown("""
     <style>
-    .main { background: linear_gradient(to bottom, #0078d4, #001e36); background-attachment: fixed; }
-    .stApp { background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg"); background-size: cover; }
-    
-    /* Window Style */
-    .win-window {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(15px);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 20px;
-        color: #1a1a1a;
-        min-height: 500px;
+    .stApp {
+        background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
+        background-size: cover;
+        background-attachment: fixed;
     }
     
-    /* Taskbar Style */
-    .taskbar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 50px;
-        background: rgba(243, 243, 243, 0.8);
-        backdrop-filter: blur(10px);
+    /* Solid Glass Style for Readability */
+    .win-card {
+        background: rgba(255, 255, 255, 0.95); /* Più opaco per leggere bene */
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        color: #1e1e1e;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        margin-bottom: 20px;
+    }
+
+    .taskbar-sim {
+        background: rgba(243, 243, 243, 0.9);
+        padding: 10px;
+        border-radius: 50px;
         display: flex;
         justify-content: center;
-        align-items: center;
-        z-index: 1000;
+        gap: 20px;
+        margin-top: 20px;
+        border: 1px solid rgba(255,255,255,0.5);
     }
     
-    .task-icon { margin: 0 15px; cursor: pointer; width: 32px; transition: 0.2s; }
-    .task-icon:hover { transform: scale(1.2); }
+    h1, h2, h3, p { color: #1e1e1e !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- STATE MANAGEMENT (SCORE & PROGRESS) ---
+# --- SESSION STATE ---
 if 'score' not in st.session_state:
     st.session_state.score = 100
-if 'completed' not in st.session_state:
-    st.session_state.completed = []
+if 'actions_taken' not in st.session_state:
+    st.session_state.actions_taken = 0
 
-# --- HEADER: SCORE & STATUS ---
-col_s1, col_s2 = st.columns([4, 1])
-with col_s2:
-    st.metric("Resilience Score", f"{st.session_state.score}/100")
+# --- TOP BAR: SCORE ---
+c1, c2 = st.columns([5, 1])
+with c2:
+    st.markdown(f"""
+        <div style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; text-align: center;">
+            <span style="color: white; font-size: 0.8rem;">Resilience Score</span><br>
+            <span style="color: #00ff00; font-size: 1.5rem; font-weight: bold;">{st.session_state.score}</span>
+        </div>
+    """, unsafe_allow_html=True)
 
-# --- NAVIGATION MENU (TASKBAR SIMULATION) ---
-menu = st.selectbox("Switch App:", ["🏠 Desktop / Start", "📧 Outlook", "📂 File Explorer", "🔐 Security Center"], label_visibility="collapsed")
+# --- NAVIGATION ---
+app_select = st.selectbox("Search or Select App:", 
+                         ["🏠 Desktop", "📧 Outlook", "📂 File Explorer", "🛡️ Microsoft Defender"], 
+                         label_visibility="collapsed")
 
-# --- 1. DESKTOP / START ---
-if menu == "🏠 Desktop / Start":
-    st.markdown('<div class="win-window"><h1>Welcome to Windows 11</h1><p>Select an app from the dropdown to start your Cyber Readiness audit.</p></div>', unsafe_allow_html=True)
+# --- 1. DESKTOP ---
+if app_select == "🏠 Desktop":
+    st.markdown("""
+        <div class="win-card">
+            <h1>Good morning, Serena</h1>
+            <p>Your system is currently under audit. Please check your applications for potential security risks.</p>
+            <hr>
+            <h4>System Tasks:</h4>
+            <ul>
+                <li>Review 3 unread critical emails in Outlook.</li>
+                <li>Audit sharing permissions in OneDrive.</li>
+                <li>Verify 1 active threat in Defender.</li>
+            </ul>
+        </div>
+    """, unsafe_allow_html=True)
 
-# --- 2. OUTLOOK (PHISHING SCENARIOS) ---
-elif menu == "📧 Outlook":
-    st.markdown('<div class="win-window"><h2>Outlook Web</h2>', unsafe_allow_html=True)
-    scenario = st.radio("Select Email to Review:", ["Email 1: IT Support", "Email 2: Unpaid Invoice", "Email 3: CEO Message"])
+# --- 2. OUTLOOK (SCENARI COMPLESSI) ---
+elif app_select == "📧 Outlook":
+    st.markdown('<div class="win-card"><h2>Outlook Web - Inbox</h2>', unsafe_allow_html=True)
     
-    if scenario == "Email 1: IT Support":
-        st.info("**From:** admin@m-office365-security.com\n\n**Subject:** MFA Verification Required")
-        st.write("Click here to re-enable your account.")
-        choice = st.button("Click Link & Login")
-        if choice:
-            st.session_state.score -= 20
-            st.error("❌ WRONG: The domain 'm-office365-security.com' is fake. -20 Points.")
-            
-    elif scenario == "Email 2: Unpaid Invoice":
-        st.info("**From:** accounts@real-vendor.com\n\n**Subject:** Invoice_9921.zip")
-        st.write("Please find the attached invoice for last month.")
-        choice = st.button("Download & Open ZIP")
-        if choice:
-            st.session_state.score -= 30
-            st.error("🚨 MALWARE: ZIP files from unexpected emails often contain ransomware. -30 Points.")
+    scenario = st.selectbox("View Email:", [
+        "Select an email...",
+        "1. Internal: Bonus Payment Link",
+        "2. System: Unusual Login Attempt",
+        "3. Client: New Project Proposal"
+    ])
 
-    elif scenario == "Email 3: CEO Message":
-        st.info("**From:** serena.ceo.42@gmail.com\n\n**Subject:** Quick favor")
-        st.write("I'm in a meeting. Can you buy 5 Amazon gift cards for a client?")
-        choice = st.button("Reply & Ask for details")
-        if choice:
-            st.session_state.score -= 25
-            st.error("⚠️ BEC ATTACK: Business Email Compromise. Your CEO would never use Gmail for this. -25 Points.")
-    st.markdown('</div>', unsafe_allow_html=True)
+    if scenario == "1. Internal: Bonus Payment Link":
+        st.write("**From:** HR-Department <noreply@company-hr-portal.net>")
+        st.write("**Subject:** Urgent: Click to claim your 2026 performance bonus")
+        st.image("https://img.icons8.com/color/48/000000/info.png", width=30)
+        st.info("Wait! Check the link before clicking: `https://bit.ly/claim-bonus-2026` (Points to an external shortener)")
+        
+        col_a, col_b, col_c = st.columns(3)
+        if col_a.button("Click & Claim"):
+            st.session_state.score -= 40
+            st.error("🚨 FAIL: HR never uses link shorteners for payroll. You've been phished. -40 pts")
+        if col_b.button("Reply & Ask Info"):
+            st.session_state.score -= 10
+            st.warning("⚠️ RISKY: Replying confirms your email is active. Better to call HR directly. -10 pts")
+        if col_c.button("Report to IT"):
+            st.session_state.score += 20
+            st.success("🎯 EXCELLENT: You spotted the suspicious domain and short-link. +20 pts")
 
-# --- 3. FILE EXPLORER (DATA GOVERNANCE) ---
-elif menu == "📂 File Explorer":
-    st.markdown('<div class="win-window"><h2>OneDrive - 42 Creative Hub</h2>', unsafe_allow_html=True)
+    elif scenario == "2. System: Unusual Login Attempt":
+        st.write("**From:** Microsoft Security <account-security-noreply@microsoft.com>")
+        st.write("**Subject:** Security alert for your account")
+        st.write("Someone just signed in to your account from: **Nairobi, Kenya**")
+        
+        choice = st.radio("Is this you?", ["Yes, it was me", "No, block account", "I am not sure, check my login history"])
+        if st.button("Confirm Response"):
+            if "block" in choice:
+                st.success("✅ PROACTIVE: Account secured immediately. +15 pts")
+                st.session_state.score += 15
+            elif "history" in choice:
+                st.info("ℹ️ GOOD: Verification is key. No points lost.")
+            else:
+                st.error("❌ DANGEROUS: You allowed an attacker into the system. -50 pts")
+                st.session_state.score -= 50
+
+# --- 3. FILE EXPLORER ---
+elif app_select == "📂 File Explorer":
+    st.markdown('<div class="win-card"><h2>OneDrive - Permissions Audit</h2>', unsafe_allow_html=True)
     
+    col1, col2, col3 = st.columns([2, 2, 1])
+    col1.write("**File Name**")
+    col2.write("**Shared With**")
+    col3.write("**Action**")
+
+    # Scenario: Over-sharing
     files = [
-        {"name": "Client_List_Confidential.csv", "perm": "Public Link", "action": "Restrict Access"},
-        {"name": "Meeting_Notes.docx", "perm": "Private", "action": "Share Publicly"},
-        {"name": "Company_Bank_Details.xlsx", "perm": "Anyone with link", "action": "Restrict Access"}
+        ["Financial_Report.xlsx", "Anyone with the link (Edit)", "Restrict"],
+        ["Team_Photo.jpg", "Anyone with the link (View)", "Keep"],
+        ["CEO_Private_Keys.txt", "Public", "DELETE IMMEDIATELY"]
     ]
-    
-    for i, f in enumerate(files):
-        c1, c2, c3 = st.columns([2, 1, 1])
-        c1.write(f"📄 {f['name']}")
-        c2.write(f"Status: {f['perm']}")
-        if c3.button("Execute Action", key=f"btn_{i}"):
-            if "Restrict" in f['action']:
-                st.success("✅ Secure! Access restricted. +10 Points.")
+
+    for f in files:
+        c1, c2, c3 = st.columns([2, 2, 1])
+        c1.text(f[0])
+        c2.text(f[1])
+        if c3.button("Fix", key=f[0]):
+            if f[2] == "Restrict" or f[2] == "DELETE IMMEDIATELY":
+                st.success("✅ Secured!")
                 st.session_state.score += 10
             else:
-                st.error("❌ Vulnerability Created! You just made a file public. -15 Points.")
-                st.session_state.score -= 15
-    st.markdown('</div>', unsafe_allow_html=True)
+                st.warning("Low risk, but good for privacy.")
 
-# --- 4. SECURITY CENTER (INCIDENT RESPONSE) ---
-elif menu == "🔐 Security Center":
-    st.markdown('<div class="win-window"><h2>Windows Security - Active Alerts</h2>', unsafe_allow_html=True)
-    st.warning("Critical Alert: Unusual login from St. Petersburg, Russia")
+# --- 4. MICROSOFT DEFENDER ---
+elif app_select == "🛡️ Microsoft Defender":
+    st.markdown('<div class="win-card"><h2>Windows Security Center</h2>', unsafe_allow_html=True)
+    st.error("Found 1 threat: **Trojan:Win32/CredentialStealer.A**")
+    st.write("Source: `Downloads/invoice.exe`")
     
-    response = st.selectbox("Immediate Action:", ["Ignore", "Call Employee", "Disable Account & Force Password Reset", "Wait for IT"])
-    if st.button("Confirm Response"):
-        if "Disable" in response:
-            st.success("🏆 CORRECT! Containment is the first priority. Security Score Improved.")
+    act = st.selectbox("Action:", ["Quarantine", "Allow on device", "Ignore"])
+    if st.button("Apply Action"):
+        if act == "Quarantine":
+            st.success("🏆 Safe! Threat removed. +20 pts")
             st.session_state.score += 20
         else:
-            st.error("❌ TOO SLOW: The attacker has now encrypted your files. -40 Points.")
-            st.session_state.score -= 40
-    st.markdown('</div>', unsafe_allow_html=True)
+            st.session_state.score = 0
+            st.error("💥 SYSTEM COMPROMISED: Your credentials have been stolen. Score reset to 0.")
 
-# --- FOOTER ---
-st.markdown("<br><br><p style='text-align: center; color: white;'>42 Creative Hub Cyber Resilience Sandbox v2.0</p>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
