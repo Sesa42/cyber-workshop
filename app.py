@@ -4,7 +4,7 @@ import time
 # Configurazione Pagina
 st.set_page_config(page_title="Cyber Resilience Sandbox", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CSS: MASSIMO CONTRASTO E LEGGIBILITÀ ---
+# --- CSS: ULTIMA GENERAZIONE PER CONTRASTO TOTALE ---
 st.markdown("""
     <style>
     /* Sfondo Windows 11 */
@@ -14,51 +14,51 @@ st.markdown("""
         background-attachment: fixed;
     }
 
-    /* Finestra BIANCA SOLIDA (Niente trasparenze) */
-    .win-content {
-        background-color: #ffffff !important;
-        border-radius: 12px;
+    /* CONTAINER BIANCO SOLIDO - Rimuove ogni trasparenza */
+    .content-container {
+        background-color: white !important;
         padding: 40px;
-        color: #000000 !important;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-        border: 1px solid #d1d1d1;
+        border-radius: 15px;
+        border: 2px solid #d1d1d1;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         margin-top: 20px;
     }
 
-    /* Forza il testo NERO ovunque */
-    h1, h2, h3, h4, p, span, li, label, div, .stMarkdown {
-        color: #000000 !important;
-        font-family: 'Segoe UI', Arial, sans-serif !important;
+    /* FORZA TESTO NERO - Indispensabile per la leggibilità */
+    h1, h2, h3, h4, p, li, span, label, div, .stMarkdown {
+        color: #1a1a1a !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        opacity: 1 !important;
     }
 
-    /* Bottoni Blu Microsoft */
+    /* BOTTONI BLU MICROSOFT - Visibili e chiari */
     .stButton>button {
         background-color: #0078d4 !important;
         color: white !important;
         border-radius: 4px !important;
-        font-weight: bold !important;
         border: none !important;
-        height: 3em !important;
-        width: 100% !important;
-    }
-    
-    /* Timer e Score Header */
-    .status-bar {
-        background: #000000;
-        padding: 15px;
-        border-radius: 10px;
-        text-align: center;
-        color: white !important;
-        margin-bottom: 10px;
+        height: 3.5em !important;
+        font-weight: bold !important;
+        width: 100%;
     }
 
-    /* Box Messaggi Teams */
-    .teams-msg {
+    /* BARRA DI STATO NERA - Per far risaltare Score e Timer */
+    .status-panel {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+        border: 1px solid #444;
+    }
+
+    /* CHAT TEAMS - Stile bolla */
+    .teams-bubble {
         background-color: #f3f2f1;
         border-left: 6px solid #6264a7;
         padding: 20px;
         margin: 15px 0;
-        color: black !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -71,102 +71,103 @@ if 'hacked' not in st.session_state:
 if 'start_time' not in st.session_state:
     st.session_state.start_time = time.time()
 
-# --- TIMER (180s) ---
+# --- TIMER (180 secondi) ---
 elapsed = time.time() - st.session_state.start_time
 remaining = max(0, int(180 - elapsed))
 if remaining == 0: st.session_state.hacked = True
 
-# --- HEADER STATUS ---
-col_t, col_s = st.columns([1, 1])
-with col_t:
-    st.markdown(f'<div class="status-bar"><span style="color:white !important;">⏳ TIME REMAINING: {remaining}s</span></div>', unsafe_allow_html=True)
-with col_s:
-    st.markdown(f'<div class="status-bar"><span style="color:white !important;">🛡️ RESILIENCE SCORE: {st.session_state.resilience}%</span></div>', unsafe_allow_html=True)
+# --- UI DI STATO ---
+col_timer, col_score = st.columns(2)
+with col_timer:
+    st.markdown(f'<div class="status-panel"><h3 style="color:white !important;">⏳ TIME: {remaining}s</h3></div>', unsafe_allow_html=True)
+with col_score:
+    st.markdown(f'<div class="status-panel"><h3 style="color:white !important;">🛡️ RESILIENCE: {st.session_state.resilience}%</h3></div>', unsafe_allow_html=True)
 
-# --- SCHERMATA RANSOMWARE ---
+# --- SCHERMATA RANSOMWARE (ROSSA) ---
 if st.session_state.hacked:
     st.markdown("""
-        <div style="background: #7d0000; padding: 60px; border-radius: 15px; text-align: center; color: white;">
-            <h1 style="color: white !important;">🚨 SYSTEM COMPROMISED 🚨</h1>
-            <p style="color: white !important;">Emergency protocols failed. Cyber-attack successful.</p>
+        <div style="background-color: #a80000; padding: 100px; border-radius: 15px; text-align: center;">
+            <h1 style="color: white !important;">🚨 SYSTEM BREACH DETECTED 🚨</h1>
+            <p style="color: white !important; font-size: 1.5rem;">The organization is now under a Ransomware attack.</p>
         </div>
     """, unsafe_allow_html=True)
-    if st.button("REBOOT SYSTEM"):
+    if st.button("SYSTEM RESTORE"):
         st.session_state.resilience = 100
         st.session_state.hacked = False
         st.session_state.start_time = time.time()
         st.rerun()
     st.stop()
 
-# --- APP NAV ---
-app = st.selectbox("CHOOSE SYSTEM APP", 
-                  ["📧 OUTLOOK", "📂 ONEDRIVE", "💬 TEAMS CHAT", "🛡️ DEFENDER", "🛠️ SYSTEM SETTINGS"], 
+# --- APP SELECTOR ---
+app = st.selectbox("Search or Select Application:", 
+                  ["📧 Outlook Mail", "📂 OneDrive Audit", "💬 Teams (Internal Chat)", "🛡️ Microsoft Defender", "⚙️ System Settings"],
                   label_visibility="collapsed")
 
-st.markdown('<div class="win-content">', unsafe_allow_html=True)
+# --- CONTENITORE PRINCIPALE ---
+st.markdown('<div class="content-container">', unsafe_allow_html=True)
 
-# --- SCENARI ---
-if app == "📧 OUTLOOK":
-    st.write("### 📬 Outlook: New Security Alert")
-    st.write("**From:** Microsoft Admin <no-reply@m-office365-verify.net>")
-    st.write("**Subject:** Urgent: Unusual activity detected in your account")
-    st.write("We detected a login from Lagos, Nigeria. Click to verify your identity.")
+if app == "📧 Outlook Mail":
+    st.write("## 📧 Outlook Web - Security Alert")
+    st.write("**From:** IT Admin (security-noreply@microsoft-office.net)")
+    st.write("**Subject:** Immediate Action: Account Compromise Detected")
+    st.info("Technical Analysis: Sender domain uses '.net' instead of '.com'. Link points to a URL shortener.")
     
-    c1, c2, c3 = st.columns(3)
-    if c1.button("Check Technical Headers"):
-        st.info("Technical Info: Domain '.net' is not official. Return-path: unknown-server.ru")
-    if c2.button("Click & Verify"):
+    col1, col2 = st.columns(2)
+    if col1.button("Verify Identity Now"):
         st.session_state.resilience -= 40
-        st.error("❌ PHISHED! You gave your credentials to a fake site.")
-    if c3.button("Report to IT"):
+        st.error("❌ PHISHED! You entered credentials on a fake site. Domain '.net' was a trap.")
+    if col2.button("Report as Phishing"):
         st.session_state.resilience += 20
-        st.success("🎯 Correct! Resilience increased.")
+        st.success("🎯 Correct! You identified the spoofed domain.")
 
-elif app == "💬 TEAMS CHAT":
-    st.write("### 💬 Microsoft Teams Chat")
-    st.markdown("""<div class="teams-msg"><b>External (IT Support - Mark):</b><br>
-    Hi Serena, I'm verifying your account sync. I've sent a code to your phone. 
-    Can you please tell me the 6-digit code?</div>""", unsafe_allow_html=True)
+elif app == "💬 Teams (Internal Chat)":
+    st.write("## 💬 Microsoft Teams - New Chat")
+    st.markdown("""<div class="teams-bubble"><b>External (IT Support - Mark):</b><br>
+    Hi Serena, I'm verifying your account migration. I've sent a 6-digit MFA code to your phone. 
+    Can you please share it here to complete the process?</div>""", unsafe_allow_html=True)
     
-    col_y, col_n = st.columns(2)
-    if col_y.button("Give Code"):
+    col_a, col_b = st.columns(2)
+    if col_a.button("Share MFA Code"):
         st.session_state.hacked = True
         st.rerun()
-    if col_n.button("Decline & Block"):
-        st.success("🏆 Safe! IT will never ask for MFA codes via chat.")
-        st.session_state.resilience += 25
+    if col_b.button("Refuse & Report User"):
+        st.success("🏆 PROTECTED! IT will NEVER ask for MFA codes via chat. This was Social Engineering.")
+        st.session_state.resilience += 30
 
-elif app == "📂 ONEDRIVE":
-    st.write("### 📂 OneDrive: Sharing Review")
-    st.write("Audit the access for the following folders:")
+elif app == "📂 OneDrive Audit":
+    st.write("## 📂 OneDrive - Sharing Review")
+    st.write("The following critical folders are currently shared with **'Anyone with the link'**:")
     
-    files = [["Accounting_Private.zip", "Anyone with link"], ["CEO_Notes.docx", "Public"]]
-    for f in files:
+    folders = [["Financial_Report_2025.zip", "Public"], ["Employee_IDs.pdf", "Public"]]
+    for f in folders:
         c1, c2 = st.columns([3, 1])
-        c1.write(f"⚠️ **{f[0]}** | Status: {f[1]}")
-        if c2.button("Restrict Access", key=f[0]):
-            st.success("Fixed!")
+        c1.write(f"⚠️ **{f[0]}** | Risk: High Exposure")
+        if c2.button(f"Make Private", key=f[0]):
+            st.success("Permission revoked!")
             st.session_state.resilience += 10
 
-elif app == "🛡️ DEFENDER":
-    st.write("### 🛡️ Microsoft Defender Security")
-    st.warning("Hardware Alert: Unknown USB drive plugged in (PARKING_LOT_FIND)")
-    if st.button("Open Folder to find owner"):
-        st.error("🚨 MALWARE! The drive contained a keylogger. Data is being stolen.")
+elif app == "🛡️ Microsoft Defender":
+    st.write("## 🛡️ Windows Security Center")
+    st.warning("New Hardware: Unknown USB drive detected (Label: 'BACKUP_DRIVE')")
+    st.write("Background: You found this drive in the coffee area. What is your action?")
+    
+    if st.button("Open Folder to Identify Owner"):
+        st.error("🚨 MALWARE! The drive contained a 'Rubber Ducky' script. Keystrokes are being recorded.")
         st.session_state.resilience -= 50
-    if st.button("Disconnect & Report"):
-        st.success("Perfect! Unknown USBs are never safe.")
+    if st.button("Deliver to IT Security"):
+        st.success("✅ SMART: Plugging in unknown USBs is a critical security violation.")
         st.session_state.resilience += 20
 
-elif app == "🛠️ SYSTEM SETTINGS":
-    st.write("### 🛠️ System Settings: Shadow IT")
-    st.write("Identify and remove unauthorized applications:")
-    apps = [["Office 365", "Official"], ["Free-VPN-Ultimate", "Unauthorized"], ["CryptoMiner.exe", "Malicious"]]
-    for a in apps:
-        c_a, c_b = st.columns([3, 1])
-        c_a.write(f"**{a[0]}** | Type: {a[1]}")
-        if a[1] != "Official" and c_b.button("Uninstall", key=a[0]):
-            st.success("Removed!")
+elif app == "⚙️ System Settings":
+    st.write("## ⚙️ Settings - Installed Apps")
+    st.write("Shadow IT Detection: Identify and remove unauthorized software.")
+    
+    soft = [["Microsoft Office", "Safe"], ["Free-VPN-Pro (Unsigned)", "Risk"], ["Advanced_Web_Crawler.exe", "Risk"]]
+    for s in soft:
+        ca, cb = st.columns([3, 1])
+        ca.write(f"**{s[0]}** | Status: {s[1]}")
+        if s[1] == "Risk" and cb.button("Uninstall", key=s[0]):
+            st.success("App Removed!")
             st.session_state.resilience += 15
 
 st.markdown('</div>', unsafe_allow_html=True)
