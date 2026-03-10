@@ -22,6 +22,34 @@ st.markdown(
 		background-size: cover;
 		background-attachment: fixed;
 	}
+	/* Win11 feel: spacing + acrylic */
+	:root {
+		--win11-radius: 14px;
+		--win11-radius-sm: 10px;
+		--win11-border: rgba(255,255,255,0.18);
+		--win11-acrylic: rgba(18, 18, 20, 0.45);
+		--win11-acrylic-strong: rgba(18, 18, 20, 0.60);
+		--win11-shadow: 0 18px 45px rgba(0,0,0,0.45);
+		--win11-shadow-soft: 0 10px 26px rgba(0,0,0,0.28);
+	}
+	/* Layout paddings like Windows app */
+	[data-testid="stAppViewContainer"] .main {
+		padding-top: 1.2rem;
+		padding-bottom: 2rem;
+	}
+	/* Acrylic surface behind app content */
+	[data-testid="stAppViewContainer"] > .main {
+		background: var(--win11-acrylic);
+		backdrop-filter: blur(14px) saturate(160%);
+		-webkit-backdrop-filter: blur(14px) saturate(160%);
+		border-top: 1px solid var(--win11-border);
+	}
+	/* Make inner blocks/cards feel like Win11 */
+	[data-testid="stVerticalBlock"],
+	[data-testid="stHorizontalBlock"],
+	[data-testid="stForm"] {
+		gap: 0.75rem;
+	}
 
 	/* Main white container */
 	.content-container {
@@ -33,11 +61,30 @@ st.markdown(
 		margin-top: 20px;
 	}
 
-	/* Force readable text ONLY inside the container */
+	/* Base typography (keep Streamlit defaults, just enforce font) */
+	html, body, [class*="css"], .stMarkdown, .stText, .stCaption {
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	}
+	/* Make default text readable on dark background */
+	.stMarkdown, .stText, .stCaption, label, p, li, h1, h2, h3, h4 {
+		color: #f5f7fb !important;
+	}
+	/* Give the main content area a translucent panel so text is always readable */
+	[data-testid="stAppViewContainer"] > .main {
+		background: rgba(0,0,0,0.45);
+		backdrop-filter: blur(6px);
+	}
+	/* White cards (optional) */
+	.content-container {
+		background-color: rgba(255,255,255,0.92) !important;
+	}
+	/* Force readable text inside the container (dark text on light card) */
 	.content-container, .content-container * {
 		color: #1a1a1a !important;
-		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-		opacity: 1 !important;
+	}
+	/* Alerts: ensure contrast */
+	[data-testid="stAlert"] * {
+		color: #111 !important;
 	}
 
 	/* Buttons */
