@@ -1,168 +1,144 @@
 import streamlit as st
 import time
 
-# ----------------------------
-# Page config
-# ----------------------------
 st.set_page_config(
 	page_title="Cyber Resilience Sandbox",
 	layout="wide",
 	initial_sidebar_state="collapsed",
 )
 
-# ----------------------------
-# CSS (background + container + UI)
-# ----------------------------
 st.markdown(
 	"""
 	<style>
-	/* Background */
+	:root {
+		--win11-radius: 14px;
+		--win11-radius-sm: 10px;
+		--win11-border: rgba(255,255,255,0.18);
+		--win11-border-strong: rgba(255,255,255,0.26);
+		--win11-acrylic: rgba(18, 18, 20, 0.52);
+		--win11-acrylic-strong: rgba(18, 18, 20, 0.66);
+		--win11-shadow: 0 18px 45px rgba(0,0,0,0.45);
+		--win11-shadow-soft: 0 10px 26px rgba(0,0,0,0.28);
+		--win11-text: #f5f7fb;
+		--win11-text-dim: rgba(245,247,251,0.78);
+		--win11-accent: #0078d4;
+	}
+
+	/* Desktop background */
 	.stApp {
 		background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
 		background-size: cover;
 		background-attachment: fixed;
 	}
-	/* Win11 feel: spacing + acrylic */
-	:root {
-		--win11-radius: 14px;
-		--win11-radius-sm: 10px;
-		--win11-border: rgba(255,255,255,0.18);
-		--win11-acrylic: rgba(18, 18, 20, 0.45);
-		--win11-acrylic-strong: rgba(18, 18, 20, 0.60);
-		--win11-shadow: 0 18px 45px rgba(0,0,0,0.45);
-		--win11-shadow-soft: 0 10px 26px rgba(0,0,0,0.28);
+
+	/* Acrylic app surface */
+	[data-testid="stAppViewContainer"] > .main {
+		background: var(--win11-acrylic);
+		backdrop-filter: blur(18px) saturate(175%);
+		-webkit-backdrop-filter: blur(18px) saturate(175%);
+		border-top: 1px solid var(--win11-border);
 	}
-	/* Layout paddings like Windows app */
+
+	/* Windows-like padding */
 	[data-testid="stAppViewContainer"] .main {
 		padding-top: 1.2rem;
 		padding-bottom: 2rem;
 	}
-	/* Acrylic surface behind app content */
-	[data-testid="stAppViewContainer"] > .main {
-		background: var(--win11-acrylic);
-		backdrop-filter: blur(14px) saturate(160%);
-		-webkit-backdrop-filter: blur(14px) saturate(160%);
-		border-top: 1px solid var(--win11-border);
-	}
-	/* Make inner blocks/cards feel like Win11 */
-	[data-testid="stVerticalBlock"],
-	[data-testid="stHorizontalBlock"],
-	[data-testid="stForm"] {
-		gap: 0.75rem;
-	}
 
-	/* Main white container */
-	.content-container {
-		background-color: white !important;
-		padding: 40px;
-		border-radius: 15px;
-		border: 2px solid #d1d1d1;
-		box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-		margin-top: 20px;
-	}
-
-	/* Base typography (keep Streamlit defaults, just enforce font) */
-	html, body, [class*="css"], .stMarkdown, .stText, .stCaption {
+	/* Typography: readable on dark */
+	html, body, [class*="css"], .stMarkdown, .stText, .stCaption, label, p, li, h1, h2, h3, h4 {
 		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+		color: var(--win11-text) !important;
 	}
-	/* Make default text readable on dark background */
-	.stMarkdown, .stText, .stCaption, label, p, li, h1, h2, h3, h4 {
-		color: #f5f7fb !important;
+	.stCaption { color: var(--win11-text-dim) !important; }
+
+	/* Inputs/select: rounded */
+	[data-testid="stSelectbox"] > div,
+	[data-testid="stTextInput"] > div,
+	[data-testid="stTextArea"] > div {
+		border-radius: var(--win11-radius-sm) !important;
 	}
-	/* Give the main content area a translucent panel so text is always readable */
-	[data-testid="stAppViewContainer"] > .main {
-		background: rgba(0,0,0,0.45);
-		backdrop-filter: blur(6px);
-	}
-	/* White cards (optional) */
+
+	/* Main content card */
 	.content-container {
-		background-color: rgba(255,255,255,0.92) !important;
+		background: rgba(255,255,255,0.92) !important;
+		padding: 40px;
+		border-radius: var(--win11-radius);
+		border: 1px solid rgba(255,255,255,0.55);
+		box-shadow: var(--win11-shadow);
+		margin-top: 16px;
 	}
-	/* Force readable text inside the container (dark text on light card) */
+
+	/* Dark text inside the white card */
 	.content-container, .content-container * {
-		color: #1a1a1a !important;
-	}
-	/* Alerts: ensure contrast */
-	[data-testid="stAlert"] * {
-		color: #111 !important;
+		color: #141414 !important;
 	}
 
-	/* Buttons */
+	/* Alerts: ensure readable */
+	[data-testid="stAlert"] * { color: #111 !important; }
+
+	/* Buttons: fluent-ish */
 	.stButton>button {
-		background-color: #0078d4 !important;
+		background-color: var(--win11-accent) !important;
 		color: white !important;
-		border-radius: 4px !important;
-		border: none !important;
-		height: 3.5em !important;
-		font-weight: bold !important;
+		border-radius: var(--win11-radius-sm) !important;
+		border: 1px solid rgba(255,255,255,0.12) !important;
+		height: 3.2em !important;
+		font-weight: 600 !important;
 		width: 100%;
+		box-shadow: 0 10px 20px rgba(0,0,0,0.18);
 	}
 
-	/* Status panels (top) */
+	/* Status panels */
 	.status-panel {
-		background-color: #000000 !important;
+		background: var(--win11-acrylic-strong) !important;
 		color: #ffffff !important;
-		padding: 20px;
-		border-radius: 10px;
+		padding: 18px 20px;
+		border-radius: var(--win11-radius);
 		text-align: center;
-		margin-bottom: 20px;
-		border: 1px solid #444;
+		margin-bottom: 18px;
+		border: 1px solid var(--win11-border-strong);
+		box-shadow: var(--win11-shadow-soft);
 	}
 
 	/* Teams bubble */
 	.teams-bubble {
-		background-color: #f3f2f1;
+		background: rgba(243, 242, 241, 0.96);
 		border-left: 6px solid #6264a7;
-		padding: 20px;
-		margin: 15px 0;
-		border-radius: 8px;
+		padding: 18px;
+		margin: 12px 0;
+		border-radius: var(--win11-radius);
+		box-shadow: 0 10px 22px rgba(0,0,0,0.12);
 	}
 	</style>
 	""",
 	unsafe_allow_html=True,
 )
 
-# ----------------------------
-# Session state init
-# ----------------------------
 if "resilience" not in st.session_state:
 	st.session_state.resilience = 100
-
 if "hacked" not in st.session_state:
 	st.session_state.hacked = False
-
 if "start_time" not in st.session_state:
 	st.session_state.start_time = time.time()
 
-# ----------------------------
-# Timer (180 seconds)
-# ----------------------------
 elapsed = time.time() - st.session_state.start_time
 remaining = max(0, int(180 - elapsed))
-
 if remaining == 0:
 	st.session_state.hacked = True
 
-# ----------------------------
-# Status UI
-# ----------------------------
 col_timer, col_score = st.columns(2)
-
 with col_timer:
 	st.markdown(
 		f'<div class="status-panel"><h3 style="color:white !important; margin:0;">⏳ TIME: {remaining}s</h3></div>',
 		unsafe_allow_html=True,
 	)
-
 with col_score:
 	st.markdown(
 		f'<div class="status-panel"><h3 style="color:white !important; margin:0;">🛡️ RESILIENCE: {st.session_state.resilience}%</h3></div>',
 		unsafe_allow_html=True,
 	)
 
-# ----------------------------
-# Ransomware screen
-# ----------------------------
 if st.session_state.hacked:
 	st.markdown(
 		"""
@@ -175,18 +151,13 @@ if st.session_state.hacked:
 		""",
 		unsafe_allow_html=True,
 	)
-
 	if st.button("SYSTEM RESTORE"):
 		st.session_state.resilience = 100
 		st.session_state.hacked = False
 		st.session_state.start_time = time.time()
 		st.rerun()
-
 	st.stop()
 
-# ----------------------------
-# App selector
-# ----------------------------
 app = st.selectbox(
 	"Search or Select Application:",
 	[
@@ -199,14 +170,8 @@ app = st.selectbox(
 	label_visibility="collapsed",
 )
 
-# ----------------------------
-# Main container start
-# ----------------------------
 st.markdown('<div class="content-container">', unsafe_allow_html=True)
 
-# ----------------------------
-# Apps
-# ----------------------------
 if app == "📧 Outlook Mail":
 	st.write("## 📧 Outlook Web - Security Alert")
 	st.write("**From:** IT Admin (security-noreply@microsoft-office.net)")
@@ -214,11 +179,9 @@ if app == "📧 Outlook Mail":
 	st.info("Technical Analysis: Sender domain uses '.net' instead of '.com'. Link points to a URL shortener.")
 
 	col1, col2 = st.columns(2)
-
 	if col1.button("Verify Identity Now", key="outlook_verify"):
 		st.session_state.resilience = max(0, st.session_state.resilience - 40)
 		st.error("❌ PHISHED! You entered credentials on a fake site. Domain '.net' was a trap.")
-
 	if col2.button("Report as Phishing", key="outlook_report"):
 		st.session_state.resilience = min(100, st.session_state.resilience + 20)
 		st.success("🎯 Correct! You identified the spoofed domain.")
@@ -235,13 +198,10 @@ elif app == "💬 Teams (Internal Chat)":
 		""",
 		unsafe_allow_html=True,
 	)
-
 	col_a, col_b = st.columns(2)
-
 	if col_a.button("Share MFA Code", key="teams_share_mfa"):
 		st.session_state.hacked = True
 		st.rerun()
-
 	if col_b.button("Refuse & Report User", key="teams_refuse"):
 		st.session_state.resilience = min(100, st.session_state.resilience + 30)
 		st.success("🏆 PROTECTED! IT will NEVER ask for MFA codes via chat. This was Social Engineering.")
@@ -249,12 +209,10 @@ elif app == "💬 Teams (Internal Chat)":
 elif app == "📂 OneDrive Audit":
 	st.write("## 📂 OneDrive - Sharing Review")
 	st.write("The following critical folders are currently shared with **'Anyone with the link'**:")
-
 	folders = [
 		["Financial_Report_2025.zip", "Public"],
 		["Employee_IDs.pdf", "Public"],
 	]
-
 	for name, visibility in folders:
 		c1, c2 = st.columns([3, 1])
 		c1.write(f"⚠️ **{name}** | Risk: High Exposure | Current: {visibility}")
@@ -266,13 +224,10 @@ elif app == "🛡️ Microsoft Defender":
 	st.write("## 🛡️ Windows Security Center")
 	st.warning("New Hardware: Unknown USB drive detected (Label: 'BACKUP_DRIVE')")
 	st.write("Background: You found this drive in the coffee area. What is your action?")
-
 	colx, coly = st.columns(2)
-
 	if colx.button("Open Folder to Identify Owner", key="defender_open_usb"):
 		st.session_state.resilience = max(0, st.session_state.resilience - 50)
 		st.error("🚨 MALWARE! The drive contained a 'Rubber Ducky' script. Keystrokes are being recorded.")
-
 	if coly.button("Deliver to IT Security", key="defender_deliver_usb"):
 		st.session_state.resilience = min(100, st.session_state.resilience + 20)
 		st.success("✅ SMART: Plugging in unknown USBs is a critical security violation.")
@@ -280,13 +235,11 @@ elif app == "🛡️ Microsoft Defender":
 elif app == "⚙️ System Settings":
 	st.write("## ⚙️ Settings - Installed Apps")
 	st.write("Shadow IT Detection: Identify and remove unauthorized software.")
-
 	soft = [
 		["Microsoft Office", "Safe"],
 		["Free-VPN-Pro (Unsigned)", "Risk"],
 		["Advanced_Web_Crawler.exe", "Risk"],
 	]
-
 	for app_name, status in soft:
 		ca, cb = st.columns([3, 1])
 		ca.write(f"**{app_name}** | Status: {status}")
@@ -295,7 +248,4 @@ elif app == "⚙️ System Settings":
 				st.session_state.resilience = min(100, st.session_state.resilience + 15)
 				st.success(f"App removed: {app_name}")
 
-# ----------------------------
-# Main container end
-# ----------------------------
 st.markdown("</div>", unsafe_allow_html=True)
