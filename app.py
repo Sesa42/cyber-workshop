@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import time
 import random
@@ -121,7 +120,6 @@ with col1:
     )
 
 with col2:
-
     score = st.session_state.resilience
 
     if score > 70:
@@ -171,12 +169,10 @@ if st.session_state.hacked:
     st.metric("Final Security Score", f"{score}%")
 
     if st.button("🔁 RESTART SYSTEM"):
-
         st.session_state.resilience = 100
         st.session_state.hacked = False
         st.session_state.start_time = time.time()
         st.session_state.logs = []
-
         st.rerun()
 
     st.stop()
@@ -198,25 +194,18 @@ st.markdown('<div class="content-container">', unsafe_allow_html=True)
 if app == "📧 Outlook Mail":
 
     st.write("## 📧 Outlook Web")
-
     st.info("Incoming: 'Urgent: Payment Declined' from security@microsoft-office.net")
 
     c1, c2 = st.columns(2)
 
     if c1.button("Verify Now"):
-
         st.session_state.resilience = max(0, st.session_state.resilience - 40)
-
         st.session_state.logs.append("❌ User clicked phishing link")
-
         st.error("Credential harvesting page opened")
 
     if c2.button("Report Phishing"):
-
         st.session_state.resilience = min(100, st.session_state.resilience + 20)
-
         st.session_state.logs.append("✔ Phishing email reported")
-
         st.success("Threat reported to SOC")
 
 # -----------------------------
@@ -239,18 +228,13 @@ elif app == "💬 Teams Chat":
     a,b = st.columns(2)
 
     if a.button("Send Code"):
-
         st.session_state.logs.append("🚨 MFA code shared with attacker")
-
         st.session_state.hacked = True
         st.rerun()
 
     if b.button("Report User"):
-
         st.session_state.resilience = min(100, st.session_state.resilience + 30)
-
         st.session_state.logs.append("✔ Social engineering attempt reported")
-
         st.success("User reported to security team")
 
 # -----------------------------
@@ -259,15 +243,11 @@ elif app == "💬 Teams Chat":
 elif app == "🛡 Defender":
 
     st.write("## 🛡 Microsoft Defender")
-
     st.warning("Suspicious PowerShell activity detected")
 
     if st.button("Isolate Device"):
-
         st.session_state.resilience = min(100, st.session_state.resilience + 15)
-
         st.session_state.logs.append("Endpoint isolated from network")
-
         st.success("Device isolated")
 
 st.markdown("</div>", unsafe_allow_html=True)
@@ -279,4 +259,3 @@ st.write("### 📜 Security Log")
 
 for log in reversed(st.session_state.logs[-6:]):
     st.write("•", log)
-```
