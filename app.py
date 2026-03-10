@@ -1,119 +1,154 @@
 import streamlit as st
 import time
 
-st.set_page_config(page_title="Win11 Cyber Emergency", layout="wide", initial_sidebar_state="collapsed")
+# Configurazione Pagina
+st.set_page_config(page_title="Cyber Resilience Sandbox", layout="wide", initial_sidebar_state="collapsed")
 
-# --- EMERGENCY ENGINE (CSS) ---
+# --- CSS: MASSIMO CONTRASTO ---
 st.markdown("""
     <style>
-    .stApp { background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg"); background-size: cover; }
-    .win-window { background: rgba(255, 255, 255, 0.98); border-radius: 12px; padding: 30px; color: #1a1a1a !important; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-    .ransom-bg { background-color: #7d0000 !important; color: white !important; padding: 50px; border-radius: 12px; text-align: center; }
-    h1, h2, h3, p, span { color: #1a1a1a !important; }
-    .timer-text { font-size: 2rem; font-weight: bold; color: #d11a2a !important; }
-    .chat-bubble { background: #e1dfdd; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #0078d4; }
+    /* Sfondo Windows 11 */
+    .stApp {
+        background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
+        background-size: cover;
+        background-attachment: fixed;
+    }
+
+    /* Finestra Solida Bianca (Niente trasparenze per leggere bene) */
+    .win-box {
+        background-color: #ffffff !important;
+        border-radius: 15px;
+        padding: 40px;
+        color: #000000 !important;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        border: 2px solid #ffffff;
+        margin-bottom: 25px;
+    }
+
+    /* Forza il colore nero per ogni pezzo di testo */
+    h1, h2, h3, h4, p, span, li, label, div {
+        color: #000000 !important;
+        font-family: 'Segoe UI', Arial, sans-serif !important;
+    }
+
+    /* Bottoni stile Windows 11 */
+    .stButton>button {
+        background-color: #0078d4 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        font-weight: bold !important;
+    }
+    
+    .stButton>button:hover {
+        background-color: #005a9e !important;
+    }
+
+    /* Chat bubble Teams */
+    .chat-bubble {
+        background-color: #f3f2f1;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 8px solid #6264a7;
+        margin: 15px 0;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- SESSION STATE ---
-if 'resilience' not in st.session_state:
-    st.session_state.resilience = 100
-if 'start_time' not in st.session_state:
-    st.session_state.start_time = time.time()
+# --- LOGICA DI SISTEMA ---
+if 'score' not in st.session_state:
+    st.session_state.score = 100
 if 'hacked' not in st.session_state:
     st.session_state.hacked = False
 
-# --- TIMER LOGIC (180 Seconds per dare spazio ai nuovi scenari) ---
-limit = 180 
-elapsed = time.time() - st.session_state.start_time
-remaining = max(0, int(limit - elapsed))
+# --- UI DI STATO (In alto a destra, sfondo nero per contrasto) ---
+st.markdown(f"""
+    <div style="background: #000000; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px;">
+        <span style="color: #ffffff !important; font-size: 1rem;">SECURITY RESILIENCE SCORE</span><br>
+        <span style="color: #00ff00 !important; font-size: 2.5rem; font-weight: bold;">{st.session_state.score}%</span>
+    </div>
+""", unsafe_allow_html=True)
 
-if remaining == 0:
-    st.session_state.hacked = True
-
-# --- TOP INTERFACE ---
-c1, c2, c3 = st.columns([3, 1, 1])
-with c2:
-    st.markdown(f'<p class="timer-text">⏳ {remaining}s</p>', unsafe_allow_html=True)
-with c3:
-    st.markdown(f'<div style="background:#1e1e1e; padding:10px; border-radius:5px; color:white !important; text-align:center;">RESILIENCE: {st.session_state.resilience}%</div>', unsafe_allow_html=True)
-
-# --- RANSOMWARE SCREEN ---
+# --- SCHERMATA HACKED ---
 if st.session_state.hacked:
-    st.markdown("""<div class="ransom-bg"><h1 style="color:white !important;">🚨 SYSTEM COMPROMISED 🚨</h1><p style="color:white !important;">Critical failure. Cybersecurity protocols breached.</p></div>""", unsafe_allow_html=True)
-    if st.button("REBOOT & RETRY"):
-        st.session_state.resilience = 100
-        st.session_state.start_time = time.time()
+    st.markdown("""
+        <div style="background: #ff0000; padding: 50px; border-radius: 20px; text-align: center; color: white;">
+            <h1 style="color: white !important;">🚨 CRITICAL SYSTEM BREACH 🚨</h1>
+            <p style="color: white !important; font-size: 1.5rem;">Your actions have allowed a cyber-attack to succeed.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    if st.button("RESTART SIMULATION"):
+        st.session_state.score = 100
         st.session_state.hacked = False
         st.rerun()
     st.stop()
 
-# --- APP SELECTION ---
-app = st.selectbox("Select Application", 
-                  ["📧 Outlook", "📂 OneDrive", "💬 Teams (Social Engineering)", "🛠️ Settings (Shadow IT)", "🛡️ Defender"], 
+# --- NAVIGAZIONE ---
+tab = st.selectbox("CHOOSE APPLICATION", 
+                  ["📧 OUTLOOK", "📂 ONEDRIVE", "💬 TEAMS CHAT", "🛡️ DEFENDER"], 
                   label_visibility="collapsed")
 
-# --- SCENARIO 1: OUTLOOK ---
-if app == "📧 Outlook":
-    st.markdown('<div class="win-window"><h2>Outlook - Inbox</h2>', unsafe_allow_html=True)
-    st.write("**Subject: Action Required: Your payment was declined**")
-    st.write("Sender: `accounts-pay-support@outlook-verify.net`")
-    col1, col2 = st.columns(2)
-    if col1.button("Check Domain Info"):
-        st.info("Technical Insight: The sender uses '.net' instead of '.com'. IP address is blacklisted.")
-    if col2.button("Report Phishing"):
-        st.success("Correct! +15% Resilience")
-        st.session_state.resilience += 15
+# --- SCENARIO: EMAIL ---
+if tab == "📧 OUTLOOK":
+    st.markdown('<div class="win-box">', unsafe_allow_html=True)
+    st.write("### 📩 Inbox: (1) Urgent Message")
+    st.write("**From:** IT Service <security@m-office365-admin.net>")
+    st.write("**Subject:** Immediate Action: Account Lockout Predicted")
+    st.write("Someone from Russia attempted to login. Click below to verify your identity.")
+    
+    c1, c2 = st.columns(2)
+    if c1.button("CLICK TO VERIFY"):
+        st.session_state.score -= 40
+        st.error("❌ FAILED: The domain '.net' is a phishing trap. Your password has been stolen.")
+    if c2.button("REPORT AS PHISHING"):
+        st.session_state.score += 15
+        st.success("✅ EXCELLENT: You spotted the fake domain. +15 pts")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- SCENARIO 2: ONEDRIVE ---
-elif app == "📂 OneDrive":
-    st.markdown('<div class="win-window"><h2>OneDrive - File Audit</h2>', unsafe_allow_html=True)
-    st.write("Review files with 'Anyone with the link' access:")
-    files = [["Accounting_2025.xlsx", "🔴"], ["Company_Logo.png", "🟢"], ["Customer_List.csv", "🔴"]]
+# --- SCENARIO: DRIVE ---
+elif tab == "📂 ONEDRIVE":
+    st.markdown('<div class="win-box">', unsafe_allow_html=True)
+    st.write("### 📂 OneDrive: Sharing Audit")
+    st.write("Audit your sensitive folders. Fix any 'Public' sharing settings.")
+    
+    files = [["Financial_Report_2026.xlsx", "Public Link"], ["HR_Contracts.zip", "Anyone with link"]]
     for f in files:
-        col_f, col_btn = st.columns([3, 1])
-        col_f.write(f"{f[1]} {f[0]}")
-        if col_btn.button(f"Revoke", key=f[0]):
-            st.success(f"Access restricted for {f[0]}")
-            st.session_state.resilience += 5
+        col_a, col_b = st.columns([3, 1])
+        col_a.write(f"⚠️ **{f[0]}** | Status: {f[1]}")
+        if col_b.button("Make Private", key=f[0]):
+            st.success("Access Restricted!")
+            st.session_state.score += 10
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- SCENARIO 3: SOCIAL ENGINEERING (TEAMS) ---
-elif app == "💬 Teams (Social Engineering)":
-    st.markdown('<div class="win-window"><h2>Microsoft Teams</h2>', unsafe_allow_html=True)
-    st.markdown("""<div class="chat-bubble"><b>External User (Marco - IT Consultant):</b><br>Hi Serena, I'm working on the server migration. I need the MFA bypass code sent to your phone to finish the update. Can you send it?</div>""", unsafe_allow_html=True)
+# --- SCENARIO: TEAMS ---
+elif tab == "💬 TEAMS CHAT":
+    st.markdown('<div class="win-box">', unsafe_allow_html=True)
+    st.write("### 💬 Microsoft Teams Chat")
+    st.markdown("""<div class="chat-bubble"><b>External User (IT Helpdesk):</b><br>
+    Hi Serena, we are fixing your email sync. I've sent an <b>MFA code</b> to your phone. 
+    Please paste it here so I can authorize the update.</div>""", unsafe_allow_html=True)
     
-    col_a, col_b = st.columns(2)
-    if col_a.button("Send Code"):
-        st.error("🚨 SCAM! Never share MFA codes. An attacker just logged into your admin account.")
-        st.session_state.resilience -= 50
-    if col_b.button("Block & Call IT"):
-        st.success("Perfect! You recognized a Social Engineering attempt. +20% Resilience")
-        st.session_state.resilience += 20
+    c_yes, c_no = st.columns(2)
+    if c_yes.button("PASTE CODE"):
+        st.session_state.hacked = True
+        st.rerun()
+    if c_no.button("REPORT USER"):
+        st.success("🏆 PROTECTED! IT will NEVER ask for MFA codes via chat. +25 pts")
+        st.session_state.score += 25
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- SCENARIO 4: SHADOW IT (SETTINGS) ---
-elif app == "🛠️ Settings (Shadow IT)":
-    st.markdown('<div class="win-window"><h2>System Settings - Installed Apps</h2>', unsafe_allow_html=True)
-    st.write("Audit unauthorized software installed by employees:")
-    apps = [["Official Office 365", "Safe"], ["Free-PDF-Converter-Pro (Unsigned)", "Suspicious"], ["BitTorrent", "Risk"]]
-    for a in apps:
-        col_a, col_st, col_btn = st.columns([2, 1, 1])
-        col_a.write(a[0])
-        col_st.write(a[1])
-        if a[1] != "Safe" and col_btn.button("Uninstall", key=a[0]):
-            st.success(f"{a[0]} removed.")
-            st.session_state.resilience += 10
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# --- SCENARIO 5: DEFENDER (PHYSICAL THREAT) ---
-elif app == "🛡️ Defender":
-    st.markdown('<div class="win-window"><h2>Windows Defender - Hardware Alert</h2>', unsafe_allow_html=True)
-    st.warning("New USB Device Connected: 'SANDISK_128GB'")
-    st.write("Background: You found this USB in the parking lot and plugged it in to find the owner.")
+# --- SCENARIO: DEFENDER ---
+elif tab == "🛡️ DEFENDER":
+    st.markdown('<div class="win-box">', unsafe_allow_html=True)
+    st.write("### 🛡️ Microsoft Defender Security")
+    st.warning("Found a USB Flash Drive connected: 'NEW_DRIVE_D'")
+    st.write("You found this drive in the breakroom. What do you do?")
     
-    if st.button("Run Scan"):
-        st.error("🚨 VIRUS DETECTED! The USB contained a 'Rubber Ducky' script that is stealing your keystrokes.")
-        st.session_state.resilience -= 40
+    if st.button("SCAN AND OPEN"):
+        st.error("🚨 MALWARE! The drive contained a hidden script that stole your local data.")
+        st.session_state.score -= 50
+    if st.button("HAND TO SECURITY"):
+        st.success("✅ SMART: Never plug in unknown devices. +20 pts")
+        st.session_state.score += 20
     st.markdown('</div>', unsafe_allow_html=True)
