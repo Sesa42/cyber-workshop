@@ -4,318 +4,191 @@ import random
 from streamlit_autorefresh import st_autorefresh
 
 # -----------------------------
-# PAGE CONFIG
+# CONFIGURAZIONE PAGINA
 # -----------------------------
 st.set_page_config(
-    page_title="Cyber Resilience Mega Sandbox",
+    page_title="Cyber Resilience Sandbox",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# auto refresh ogni secondo
+# Refresh ogni secondo per il timer
 st_autorefresh(interval=1000, key="timer")
-
-# -----------------------------
-# CSS STYLE
-# -----------------------------
-st.markdown("""
-<style>
-:root {
---win11-radius:14px;
---win11-border:rgba(255,255,255,0.18);
---win11-acrylic:rgba(18,18,20,0.52);
---win11-text:#f5f7fb;
---win11-accent:#0078d4;
-}
-.stApp {
-background:url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
-background-size:cover;
-background-attachment:fixed;
-}
-[data-testid="stAppViewContainer"] > .main {
-background: var(--win11-acrylic);
-backdrop-filter: blur(18px) saturate(175%);
-}
-.stMarkdown, label, p, h1, h2, h3 { color: var(--win11-text) !important; }
-
-.content-container {
-background: rgba(255,255,255,0.95) !important;
-padding: 40px;
-border-radius: var(--win11-radius);
-color: #141414 !important;
-}
-.content-container * { color: #141414 !important; }
-
-.stButton>button {
-background-color: var(--win11-accent) !important;
-color: white !important;
-width: 100%;
-}
-.status-panel {
-background: rgba(0, 0, 0, 0.6) !important;
-padding: 15px;
-border-radius: var(--win11-radius);
-text-align: center;
-border: 1px solid var(--win11-border);
-}
-</style>
-""", unsafe_allow_html=True)
 
 # -----------------------------
 # SESSION STATE
 # -----------------------------
-if "resilience" not in st.session_state:
-    st.session_state.resilience = 100
-if "hacked" not in st.session_state:
-    st.session_state.hacked = False
-if "start_time" not in st.session_state:
-    st.session_state.start_time = time.time()
-if "logs" not in st.session_state:
-    st.session_state.logs = []
-if "remaining" not in st.session_state:
-    st.session_state.remaining = 180
-if "last_update" not in st.session_state:
-    st.session_state.last_update = time.time()
+if "resilience" not in st.session_state: st.session_state.resilience = 100
+if "logs" not in st.session_state: st.session_state.logs = []
+if "current_app" not in st.session_state: st.session_state.current_app = None
+if "remaining" not in st.session_state: st.session_state.remaining = 180
+if "last_update" not in st.session_state: st.session_state.last_update = time.time()
+if "completed" not in st.session_state: st.session_state.completed = set()
 
-# -----------------------------
-# TIMER IN SYNC
-# -----------------------------
+# Timer Logic
 now = time.time()
-delta = now - st.session_state.last_update
-if delta >= 1:
-    st.session_state.remaining = max(0, st.session_state.remaining - int(delta))
+if (now - st.session_state.last_update) >= 1:
+    st.session_state.remaining = max(0, st.session_state.remaining - 1)
     st.session_state.last_update = now
 
-remaining = st.session_state.remaining
-attack_progress = int((180 - remaining)/180 * 100)
-if remaining == 0:
-    st.session_state.hacked = True
+# -----------------------------
+# CSS CUSTOM (STILE REACT-LIKE)
+# -----------------------------
+st.markdown("""
+<style>
+    .stApp {
+        background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
+        background-size: cover;
+    }
+    [data-testid="stAppViewContainer"] > .main {
+        background: rgba(0, 0, 0, 0.2);
+    }
+    /* Barra di stato superiore */
+    .status-bar {
+        background: rgba(15, 23, 42, 0.9);
+        padding: 15px;
+        border-radius: 0 0 15px 15px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 20px;
+    }
+    /* Icone Desktop */
+    .desktop-icon {
+        text-align: center;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .icon-box {
+        font-size: 50px;
+        margin-bottom: 5px;
+        filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+    }
+    .icon-label {
+        color: white;
+        font-weight: 500;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+        font-size: 14px;
+    }
+    /* Finestra App (Modale) */
+    .window-container {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border-top: 35px solid #f1f5f9;
+        position: relative;
+        padding: 30px;
+        color: #1e293b !important;
+        margin-top: 20px;
+    }
+    .window-container h3, .window-container p {
+        color: #1e293b !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # -----------------------------
-# RANDOM EVENTS
+# DATA: I 13 SCENARI
 # -----------------------------
-if random.random() < 0.02:
-    st.session_state.logs.append("⚠️ Suspicious outbound network traffic detected")
+SCENARIOS = {
+    "outlook": {"icon": "📧", "title": "Outlook", "desc": "Email sospetta: 'Vincita iPhone 15! Clicca qui.'", "actions": [{"l": "Clicca link", "e": -20, "log": "❌ Cliccato link phishing"}, {"l": "Segnala", "e": 5, "log": "✅ Segnalato phishing"}]},
+    "defender": {"icon": "🛡️", "title": "Defender", "desc": "Rilevato 'setup_premium.exe' nei Download.", "actions": [{"l": "Esegui", "e": -15, "log": "❌ Malware eseguito"}, {"l": "Quarantena", "e": 10, "log": "✅ Minaccia isolata"}]},
+    "mfa": {"icon": "🔑", "title": "MFA", "desc": "Richiesta login da IP sconosciuto (Russia).", "actions": [{"l": "Approva", "e": -25, "log": "❌ Accesso illecito approvato"}, {"l": "Nega", "e": 10, "log": "✅ Intrusione bloccata"}]},
+    "teams": {"icon": "💬", "title": "Teams", "desc": "Un collega chiede il tuo codice OTP via chat.", "actions": [{"l": "Invia codice", "e": -30, "log": "❌ Social Engineering riuscito"}, {"l": "Segnala utente", "e": 15, "log": "✅ Segnalato account compromesso"}]},
+    "onedrive": {"icon": "📂", "title": "OneDrive", "desc": "Rilevato download massivo di file aziendali.", "actions": [{"l": "Ignora", "e": -20, "log": "❌ Esfiltrazione dati in corso"}, {"l": "Blocca utente", "e": 15, "log": "✅ Data Loss Prevention attiva"}]},
+    "wifi": {"icon": "📶", "title": "Wi-Fi", "desc": "Ti trovi in aeroporto. C'è una rete 'Free_Public_WiFi'.", "actions": [{"l": "Connetti", "e": -15, "log": "❌ Man-in-the-middle risk"}, {"l": "Usa Hotspot 4G", "e": 10, "log": "✅ Connessione sicura"}]},
+    "update": {"icon": "⚙️", "title": "Updates", "desc": "Patch di sicurezza critica disponibile per Windows.", "actions": [{"l": "Rimanda", "e": -10, "log": "❌ Sistema vulnerabile"}, {"l": "Aggiorna ora", "e": 10, "log": "✅ Sistema patchato"}]},
+    "usb": {"icon": "🔌", "title": "USB Scan", "desc": "Trovata chiavetta USB nel parcheggio aziendale.", "actions": [{"l": "Inserisci", "e": -25, "log": "❌ Attacco 'BadUSB' eseguito"}, {"l": "Consegna a IT", "e": 10, "log": "✅ Protocollo sicurezza seguito"}]},
+    "social": {"icon": "📱", "title": "Social", "desc": "Richiesta d'amicizia da un recruiter sospetto su LinkedIn.", "actions": [{"l": "Accetta", "e": -10, "log": "❌ Raccolta info (OSINT)"}, {"l": "Ignora", "e": 5, "log": "✅ Privacy protetta"}]},
+    "backup": {"icon": "💾", "title": "Backup", "desc": "Il sistema chiede di verificare l'integrità dei backup.", "actions": [{"l": "Salta", "e": -15, "log": "❌ Rischio perdita dati"}, {"l": "Verifica", "e": 10, "log": "✅ Ripristino garantito"}]},
+    "browser": {"icon": "🌐", "title": "Browser", "desc": "Il browser segnala un certificato SSL scaduto.", "actions": [{"l": "Procedi comunque", "e": -15, "log": "❌ Navigazione non sicura"}, {"l": "Esci dal sito", "e": 5, "log": "✅ Evitato sito sospetto"}]},
+    "cloud": {"icon": "☁️", "title": "Cloud App", "desc": "Un'app esterna chiede permessi di lettura sulla tua mail.", "actions": [{"l": "Autorizza", "e": -20, "log": "❌ Accesso dati non autorizzato"}, {"l": "Nega permessi", "e": 10, "log": "✅ Shadow IT bloccato"}]},
+    "password": {"icon": "📝", "title": "Policy", "desc": "Devi scegliere una nuova password aziendale.", "actions": [{"l": "User2024!", "e": -10, "log": "❌ Password debole"}, {"l": "K9#m$P2!zQ", "e": 15, "log": "✅ Password robusta"}]}
+}
 
 # -----------------------------
-# HEADER
+# HEADER (STATUS BAR)
 # -----------------------------
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown(f'<div class="status-panel"><h3>⏳ TIME: {remaining}s</h3></div>', unsafe_allow_html=True)
-with col2:
-    score = st.session_state.resilience
-    color = "#00ff00" if score > 50 else "#ff4b4b"
-    st.markdown(f'<div class="status-panel"><h3>🛡️ RESILIENCE: <span style="color:{color};">{score}%</span></h3></div>', unsafe_allow_html=True)
+c1, c2, c3 = st.columns([1.5, 2, 1])
+with c1:
+    st.markdown(f"### ⏳ {st.session_state.remaining}s")
+with c2:
+    color = "#00ff00" if st.session_state.resilience > 50 else "#ff4b4b"
+    st.markdown(f"<h3 style='text-align:center;color:{color}'>🛡️ RESILIENZA: {st.session_state.resilience}%</h3>", unsafe_allow_html=True)
+with c3:
+    if st.button("🏠 DESKTOP", use_container_width=True):
+        st.session_state.current_app = None
+        st.rerun()
 
-st.write("### 🔐 Encryption Activity")
-st.progress(attack_progress)
+st.progress(max(0, min(int((180 - st.session_state.remaining)/180 * 100), 100)))
 
 # -----------------------------
-# HACKED SCREEN
+# CONTROLLO FINE GIOCO
 # -----------------------------
-if st.session_state.hacked:
-    st.markdown(
-        '<div style="background-color:#a80000; padding:100px; border-radius:15px; text-align:center;">'
-        '<h1 style="color:white !important;">🚨 SYSTEM BREACH 🚨</h1>'
-        '<p style="color:white !important;">Ransomware encryption complete.</p></div>',
-        unsafe_allow_html=True
-    )
-    st.write("## Incident Report")
-    if score > 80:
-        st.success("Excellent cyber awareness")
-    elif score > 50:
-        st.warning("Moderate cyber awareness")
-    else:
-        st.error("High risk behaviour detected")
-    st.metric("Final Security Score", f"{score}%")
-    if st.button("RESTART SYSTEM"):
-        st.session_state.resilience = 100
-        st.session_state.hacked = False
-        st.session_state.start_time = time.time()
-        st.session_state.remaining = 180
-        st.session_state.last_update = time.time()
-        st.session_state.logs = []
+if st.session_state.resilience <= 0 or st.session_state.remaining <= 0:
+    st.error("🚨 SISTEMA COMPROMESSO! Ransomware attivo.")
+    if st.button("RESTART"):
+        st.session_state.clear()
+        st.rerun()
     st.stop()
 
 # -----------------------------
-# APPLICATION SELECTOR
+# DESKTOP GRID (Se nessuna app aperta)
 # -----------------------------
-app = st.selectbox(
-    "Select Application:",
-    [
-        "📧 Outlook Mail",
-        "💬 Teams Chat",
-        "📂 OneDrive Audit",
-        "🛡️ Defender",
-        "⚙️ Settings",
-        "📊 Dashboard Analytics",
-        "🔑 MFA Simulator",
-        "🖥 Remote Desktop",
-        "💣 Fake Virus Scan",
-        "📁 File Recovery",
-        "📡 Network Monitor",
-        "🛒 Fake Email Shop",
-        "🎯 Cyber Quiz"
-    ],
-    label_visibility="collapsed"
-)
-
-st.markdown('<div class="content-container">', unsafe_allow_html=True)
+if st.session_state.current_app is None:
+    st.write("##")
+    cols = st.columns(5) # Griglia da 5 icone per riga
+    
+    for i, (key, val) in enumerate(SCENARIOS.items()):
+        with cols[i % 5]:
+            st.markdown(f"""
+                <div class="desktop-icon">
+                    <div class="icon-box">{val['icon']}</div>
+                    <div class="icon-label">{val['title']}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            # Determina se l'app è già stata completata
+            btn_label = "✅ Fatto" if key in st.session_state.completed else "Apri"
+            if st.button(btn_label, key=f"btn_{key}", use_container_width=True):
+                st.session_state.current_app = key
+                st.rerun()
 
 # -----------------------------
-# OUTLOOK MAIL
+# APP WINDOW (Se un'app è aperta)
 # -----------------------------
-if app == "📧 Outlook Mail":
-    st.write("## 📧 Outlook Web")
-    st.info("Incoming: 'Urgent: Payment Declined' from security@microsoft-office.net")
-    c1, c2 = st.columns(2)
-    if c1.button("Verify Now"):
-        st.session_state.resilience = max(0, st.session_state.resilience - 40)
-        st.session_state.logs.append("❌ PHISHED! User clicked phishing link")
-        st.error("Credential harvesting page opened")
-    if c2.button("Report Phishing"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 20)
-        st.session_state.logs.append("✔ Phishing email reported")
-        st.success("Threat reported to SOC")
+else:
+    app_id = st.session_state.current_app
+    app_data = SCENARIOS[app_id]
+    
+    st.markdown(f"""
+        <div class="window-container">
+            <h2 style="margin-top:-10px">{app_data['icon']} {app_data['title']}</h2>
+            <hr>
+            <p style="font-size:18px">{app_data['desc']}</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Pulsanti azioni (fuori dal markdown per funzionare)
+    col_act1, col_act2 = st.columns(2)
+    for idx, action in enumerate(app_data['actions']):
+        with [col_act1, col_act2][idx]:
+            if st.button(action['l'], key=f"act_{idx}", use_container_width=True):
+                st.session_state.resilience = max(0, min(100, st.session_state.resilience + action['e']))
+                st.session_state.logs.append(action['log'])
+                st.session_state.completed.add(app_id)
+                st.session_state.current_app = None # Torna al desktop
+                st.rerun()
 
 # -----------------------------
-# TEAMS CHAT
+# LOGS (SOC PANEL)
 # -----------------------------
-elif app == "💬 Teams Chat":
-    st.write("## 💬 Microsoft Teams")
-    st.markdown(
-        '<div style="background:#f3f2f1; padding:15px; border-left:5px solid #6264a7; border-radius:10px;">'
-        '<b>Mark (IT Support):</b> Hi! Send me the MFA code you just received to verify your login.</div>',
-        unsafe_allow_html=True
-    )
-    ca, cb = st.columns(2)
-    if ca.button("Send Code"):
-        st.session_state.hacked = True
-        st.session_state.logs.append("🚨 MFA code shared with attacker")
-    if cb.button("Report User"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 30)
-        st.session_state.logs.append("🏆 Social engineering attempt reported")
-        st.success("User reported to security team")
-
-# -----------------------------
-# ONEDRIVE AUDIT
-# -----------------------------
-elif app == "📂 OneDrive Audit":
-    st.write("## 📂 OneDrive Audit")
-    st.info("Detected unusual file download activity")
-    c1, c2 = st.columns(2)
-    if c1.button("Investigate Files"):
-        st.session_state.resilience = max(0, st.session_state.resilience - 20)
-        st.session_state.logs.append("❌ Unreviewed file access")
-        st.error("Potential data exfiltration")
-    if c2.button("Report Incident"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 25)
-        st.session_state.logs.append("✔ File access incident reported")
-        st.success("Incident reported to SOC")
-
-# -----------------------------
-# DEFENDER
-# -----------------------------
-elif app == "🛡️ Defender":
-    st.write("## 🛡️ Microsoft Defender")
-    st.warning("Suspicious PowerShell activity detected")
-    if st.button("Isolate Device"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 15)
-        st.session_state.logs.append("Endpoint isolated from network")
-        st.success("Device isolated successfully")
-
-# -----------------------------
-# SETTINGS
-# -----------------------------
-elif app == "⚙️ Settings":
-    st.write("## ⚙️ Settings")
-    st.write("Adjust simulation parameters (future extension)")
-
-# -----------------------------
-# DASHBOARD ANALYTICS
-# -----------------------------
-elif app == "📊 Dashboard Analytics":
-    st.write("## 📊 Dashboard Analytics")
-    st.bar_chart({"Resilience":[st.session_state.resilience, 100-st.session_state.resilience]})
-
-# -----------------------------
-# MFA SIMULATOR
-# -----------------------------
-elif app == "🔑 MFA Simulator":
-    st.write("## 🔑 MFA Simulator")
-    if st.button("Attempt MFA Bypass"):
-        st.session_state.hacked = True
-        st.session_state.logs.append("🚨 MFA bypass attempt failed")
-
-# -----------------------------
-# REMOTE DESKTOP
-# -----------------------------
-elif app == "🖥 Remote Desktop":
-    st.write("## 🖥 Remote Desktop / VPN Alerts")
-    st.warning("New VPN login from unknown location detected")
-    if st.button("Block IP"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 10)
-        st.success("IP blocked successfully")
-
-# -----------------------------
-# FAKE VIRUS SCAN
-# -----------------------------
-elif app == "💣 Fake Virus Scan":
-    st.write("## 💣 Fake Virus Scan")
-    st.progress(random.randint(0,100))
-    if st.button("Quarantine Threats"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 15)
-        st.success("Fake threats neutralized")
-
-# -----------------------------
-# FILE RECOVERY
-# -----------------------------
-elif app == "📁 File Recovery":
-    st.write("## 📁 File Recovery")
-    if st.button("Recover Critical Files"):
-        st.session_state.resilience = min(100, st.session_state.resilience + 20)
-        st.success("Files recovered successfully")
-
-# -----------------------------
-# NETWORK MONITOR
-# -----------------------------
-elif app == "📡 Network Monitor":
-    st.write("## 📡 Network Monitor")
-    st.line_chart({"Suspicious Packets":[random.randint(0,50) for _ in range(10)]})
-
-# -----------------------------
-# FAKE EMAIL SHOP
-# -----------------------------
-elif app == "🛒 Fake Email Shop":
-    st.write("## 🛒 Fake Email Shop")
-    if st.button("Click Suspicious Link"):
-        st.session_state.resilience = max(0, st.session_state.resilience - 30)
-        st.error("Phishing link clicked!")
-        st.session_state.logs.append("❌ Clicked suspicious shopping email link")
-
-# -----------------------------
-# CYBER QUIZ
-# -----------------------------
-elif app == "🎯 Cyber Quiz":
-    st.write("## 🎯 Cyber Quiz")
-    q = "What is the safest way to handle unknown attachments?"
-    answer = st.radio(q, ["Open immediately","Scan with antivirus","Forward to friend"])
-    if st.button("Submit Answer"):
-        if answer == "Scan with antivirus":
-            st.success("Correct! Resilience increased")
-            st.session_state.resilience = min(100, st.session_state.resilience + 20)
-            st.session_state.logs.append("✔ Quiz correct answer")
-        else:
-            st.error("Incorrect! Resilience decreased")
-            st.session_state.resilience = max(0, st.session_state.resilience - 10)
-            st.session_state.logs.append("❌ Quiz wrong answer")
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# -----------------------------
-# SOC LOG
-# -----------------------------
-st.write("### 📜 Security Log")
-for log in reversed(st.session_state.logs[-6:]):
-    st.write("•", log)
+st.write("---")
+with st.expander("📜 SYSTEM LOGS (Security Operations Center)", expanded=True):
+    if not st.session_state.logs:
+        st.info("In attesa di eventi...")
+    else:
+        for log in reversed(st.session_state.logs[-5:]):
+            st.code(log)
