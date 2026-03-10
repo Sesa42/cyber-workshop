@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 # PAGE CONFIG
 # -----------------------------
 st.set_page_config(
-    page_title="Cyber Resilience Sandbox",
+    page_title="Cyber Resilience Mega Sandbox",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -18,8 +18,7 @@ st_autorefresh(interval=1000, key="timer")
 # -----------------------------
 # CSS STYLE
 # -----------------------------
-st.markdown(
-"""
+st.markdown("""
 <style>
 :root {
 --win11-radius:14px;
@@ -60,9 +59,7 @@ text-align: center;
 border: 1px solid var(--win11-border);
 }
 </style>
-""",
-unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # -----------------------------
 # SESSION STATE
@@ -82,7 +79,6 @@ if "logs" not in st.session_state:
 elapsed = time.time() - st.session_state.start_time
 remaining = max(0, int(180 - elapsed))
 attack_progress = int((elapsed / 180) * 100)
-
 if remaining == 0:
     st.session_state.hacked = True
 
@@ -140,7 +136,9 @@ if st.session_state.hacked:
 # -----------------------------
 app = st.selectbox(
     "Select Application:",
-    ["📧 Outlook Mail", "💬 Teams Chat", "🛡️ Defender"],
+    ["📧 Outlook Mail", "💬 Teams Chat", "📂 OneDrive Audit", "🛡️ Defender", "⚙️ Settings",
+     "📊 Dashboard Analytics", "🔑 MFA Simulator", "🖥 Remote Desktop", "💣 Fake Virus Scan",
+     "📁 File Recovery", "📡 Network Monitor", "🛒 Fake Email Shop", "🎯 Cyber Quiz"],
     label_visibility="collapsed"
 )
 
@@ -169,7 +167,7 @@ elif app == "💬 Teams Chat":
     st.write("## 💬 Microsoft Teams")
     st.markdown(
         '<div style="background:#f3f2f1; padding:15px; border-left:5px solid #6264a7; border-radius:10px;">'
-        '<b>Mark (IT):</b> Hi! Send me the MFA code you just received to verify your login.</div>',
+        '<b>Mark (IT Support):</b> Hi! Send me the MFA code you just received to verify your login.</div>',
         unsafe_allow_html=True
     )
     ca, cb = st.columns(2)
@@ -183,6 +181,22 @@ elif app == "💬 Teams Chat":
         st.success("User reported to security team")
 
 # -----------------------------
+# ONEDRIVE AUDIT
+# -----------------------------
+elif app == "📂 OneDrive Audit":
+    st.write("## 📂 OneDrive Audit")
+    st.info("Detected unusual file download activity")
+    c1, c2 = st.columns(2)
+    if c1.button("Investigate Files"):
+        st.session_state.resilience = max(0, st.session_state.resilience - 20)
+        st.session_state.logs.append("❌ Unreviewed file access")
+        st.error("Potential data exfiltration")
+    if c2.button("Report Incident"):
+        st.session_state.resilience = min(100, st.session_state.resilience + 25)
+        st.session_state.logs.append("✔ File access incident reported")
+        st.success("Incident reported to SOC")
+
+# -----------------------------
 # DEFENDER PANEL
 # -----------------------------
 elif app == "🛡️ Defender":
@@ -192,6 +206,70 @@ elif app == "🛡️ Defender":
         st.session_state.resilience = min(100, st.session_state.resilience + 15)
         st.session_state.logs.append("Endpoint isolated from network")
         st.success("Device isolated successfully")
+
+# -----------------------------
+# SETTINGS
+# -----------------------------
+elif app == "⚙️ Settings":
+    st.write("## ⚙️ Settings")
+    st.write("Adjust simulation parameters (future extension)")
+
+# -----------------------------
+# EXTRA FUN MODULES
+# -----------------------------
+elif app == "📊 Dashboard Analytics":
+    st.write("## 📊 Dashboard Analytics")
+    st.bar_chart({"Resilience":[st.session_state.resilience, 100-st.session_state.resilience]})
+
+elif app == "🔑 MFA Simulator":
+    st.write("## 🔑 MFA Simulator")
+    if st.button("Attempt MFA Bypass"):
+        st.session_state.hacked = True
+        st.session_state.logs.append("🚨 MFA bypass attempt failed")
+
+elif app == "🖥 Remote Desktop":
+    st.write("## 🖥 Remote Desktop / VPN Alerts")
+    st.warning("New VPN login from unknown location detected")
+    if st.button("Block IP"):
+        st.session_state.resilience = min(100, st.session_state.resilience + 10)
+        st.success("IP blocked successfully")
+
+elif app == "💣 Fake Virus Scan":
+    st.write("## 💣 Fake Virus Scan")
+    st.progress(random.randint(0,100))
+    if st.button("Quarantine Threats"):
+        st.session_state.resilience = min(100, st.session_state.resilience + 15)
+        st.success("Fake threats neutralized")
+
+elif app == "📁 File Recovery":
+    st.write("## 📁 File Recovery")
+    if st.button("Recover Critical Files"):
+        st.session_state.resilience = min(100, st.session_state.resilience + 20)
+        st.success("Files recovered successfully")
+
+elif app == "📡 Network Monitor":
+    st.write("## 📡 Network Monitor")
+    st.line_chart({"Suspicious Packets":[random.randint(0,50) for _ in range(10)]})
+
+elif app == "🛒 Fake Email Shop":
+    st.write("## 🛒 Fake Email Shop")
+    if st.button("Click Suspicious Link"):
+        st.session_state.resilience = max(0, st.session_state.resilience - 30)
+        st.error("Phishing link clicked!")
+
+elif app == "🎯 Cyber Quiz":
+    st.write("## 🎯 Cyber Quiz")
+    q = "What is the safest way to handle unknown attachments?"
+    answer = st.radio(q, ["Open immediately","Scan with antivirus","Forward to friend"])
+    if st.button("Submit Answer"):
+        if answer == "Scan with antivirus":
+            st.success("Correct! Resilience increased")
+            st.session_state.resilience = min(100, st.session_state.resilience + 20)
+            st.session_state.logs.append("✔ Quiz correct answer")
+        else:
+            st.error("Incorrect! Resilience decreased")
+            st.session_state.resilience = max(0, st.session_state.resilience - 10)
+            st.session_state.logs.append("❌ Quiz wrong answer")
 
 st.markdown("</div>", unsafe_allow_html=True)
 
