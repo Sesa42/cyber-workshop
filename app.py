@@ -4,7 +4,7 @@ import random
 from streamlit_autorefresh import st_autorefresh
 
 # -----------------------------
-# PAGE CONFIGURATION
+# 1. PAGE CONFIGURATION (Only once!)
 # -----------------------------
 st.set_page_config(
     page_title="Cyber Resilience Sandbox",
@@ -12,10 +12,70 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# -----------------------------
+# 2. TIMER (Only once!)
+# -----------------------------
 st_autorefresh(interval=1000, key="timer")
 
 # -----------------------------
-# SESSION STATE
+# 3. VISIBILITY & STYLE FIXES
+# -----------------------------
+st.markdown("""
+<style>
+    /* 1. Main Background (Desktop Wallpaper) */
+    .stApp {
+        background: url("https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg");
+        background-size: cover;
+        background-attachment: fixed;
+    }
+
+    /* 2. Global Text Visibility Fix */
+    /* This ensures all standard text, headers, and labels are dark and readable */
+    .stMarkdown, p, h1, h2, h3, span, label, .stText {
+        color: #ffffff !important;
+    }
+
+    /* 3. The Window Container (White box for scenarios) */
+    .window-container {
+        background: #ffffff !important;
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        border-top: 35px solid #e2e8f0;
+        padding: 30px;
+        margin-top: 20px;
+    }
+
+    /* 4. Outlook-style Blue Buttons */
+    div.stButton > button {
+        background-color: #0078D4 !important;
+        color: white !important;
+        border-radius: 4px !important;
+        border: none !important;
+        font-weight: 600 !important;
+        transition: 0.2s;
+    }
+    div.stButton > button:hover {
+        background-color: #005a9e !important;
+        border: none !important;
+    }
+
+    /* 5. Icons & Labels on the Desktop */
+    .icon-box {
+        font-size: 55px;
+        filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
+    }
+    .icon-label {
+        color: white !important; /* Keep labels white on the blue wallpaper */
+        font-weight: 500;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        font-size: 14px;
+        margin-top: 5px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# 4. SESSION STATE
 # -----------------------------
 if "resilience" not in st.session_state: st.session_state.resilience = 100
 if "logs" not in st.session_state: st.session_state.logs = []
