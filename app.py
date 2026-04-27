@@ -36,106 +36,74 @@ def apply_styles() -> None:
     """Apply all CSS styling for the application."""
     st.markdown(f"""
     <style>
-        /* Main Background */
+        /* Sfondo principale */
         .stApp {{
             background: url("{BG_IMAGE_URL}");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* Main Container Overlay */
+        /* Overlay scuro per far risaltare le icone */
         [data-testid="stAppViewContainer"] > .main {{
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
         }}
 
-        /* Global Text Visibility - Solo per il corpo principale */
-        [data-testid="stAppViewContainer"] .stMarkdown,
-        [data-testid="stAppViewContainer"] p,
-        [data-testid="stAppViewContainer"] h1,
-        [data-testid="stAppViewContainer"] h2,
-        [data-testid="stAppViewContainer"] h3,
-        [data-testid="stAppViewContainer"] span,
+        /* TESTO GENERALE: Bianco solo fuori dai container bianchi */
+        [data-testid="stAppViewContainer"] .stMarkdown p, 
+        [data-testid="stAppViewContainer"] h1, 
+        [data-testid="stAppViewContainer"] h2, 
+        [data-testid="stAppViewContainer"] h3, 
         [data-testid="stAppViewContainer"] label {{
             color: #ffffff !important;
         }}
 
-        /* Ripristina visibilità per i Log e i messaggi di sistema */
-        .stAlert p, .stExpander details, .stCode blockcode {{
-            color: #000000 !important;
+        /* WINDOW CONTAINER: Forziamo tutto il testo interno in nero/scuro */
+        .window-container, .window-container * {{
+            color: #0f172a !important;
+            fill: #0f172a !important;
         }}
-
-        /* Forza il colore nero specifico per il widget di info */
-        div[data-testid="stNotification"] p {{
-            color: #1e3a8a !important;
-        }}
-
-        /* Rendi l'expander leggibile */
-        .streamlit-expanderHeader {{
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            color: #000000 !important;
-            border-radius: 8px;
-        }}
-        .streamlit-expanderContent {{
-            background-color: rgba(255, 255, 255, 0.8) !important;
-            color: #000000 !important;
-        }}
-
-        /* Migliora lo spacing dentro l'expander dei log */
-        .streamlit-expanderContent div {{
-            margin-bottom: 5px;
-        }}
-
-        /* Desktop Icons */
-        .desktop-icon {{
-            text-align: center;
-            padding: 15px;
-            cursor: pointer;
-        }}
-
-        .icon-box {{
-            font-size: 55px;
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
-        }}
-
-        .icon-label {{
-            color: white !important;
-            font-weight: 500;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            font-size: 14px;
-            margin-top: 5px;
-        }}
-
-        /* Window Container (Modal) */
+        
         .window-container {{
-            background: #ffffff !important;
+            background: rgba(255, 255, 255, 0.95) !important;
             border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            border-top: 35px solid #e2e8f0;
             padding: 30px;
-            color: #0f172a !important;
             margin-top: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border-top: 35px solid #e2e8f0;
         }}
 
-        .window-container h2,
-        .window-container p,
-        .window-container label {{
-            color: #0f172a !important;
+        /* LOGS (EXPANDER): Rendiamolo solido e leggibile */
+        .streamlit-expanderHeader {{
+            background-color: white !important;
+            border-radius: 8px !important;
+        }}
+        
+        .streamlit-expanderHeader span, .streamlit-expanderHeader p {{
+            color: #000000 !important;
         }}
 
-        /* Outlook-style Blue Buttons */
+        .streamlit-expanderContent {{
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 0 0 8px 8px !important;
+            padding: 20px !important;
+        }}
+
+        .streamlit-expanderContent * {{
+            color: #000000 !important;
+            fill: #000000 !important;
+        }}
+
+        /* Bottoni stile Outlook */
         div.stButton > button {{
             background-color: #0078D4 !important;
             color: white !important;
-            border-radius: 4px !important;
             border: none !important;
             font-weight: 600 !important;
-            transition: 0.2s;
         }}
 
-        div.stButton > button:hover {{
-            background-color: #005a9e !important;
-            border: none !important;
-        }}
+        /* Desktop Icons */
+        .icon-box {{ font-size: 55px; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }}
+        .icon-label {{ font-weight: 500; text-shadow: 2px 2px 4px #000; }}
     </style>
     """, unsafe_allow_html=True)
 
