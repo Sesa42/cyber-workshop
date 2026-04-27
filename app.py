@@ -265,15 +265,16 @@ if game_finished or is_dead:
     st.markdown(f"""
     <div style="background: white; padding: 30px; border-radius: 15px; border-top: 40px solid {result_color}; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: {result_color}; margin-top: 0;">{result_text}</h1>
-        <h2 style="color: #333;">Final Resilience: {st.session_state.resilience}%</h2>
-        <p style="color: #666; font-size: 18px;">Scenarios Managed: {len(st.session_state.completed)} / 13</p>
+        <h2 style="color: #333;">Final Resilience Score: {st.session_state.resilience}%</h2>
+        <p style="color: #666; font-size: 18px;">Scenarios Successfully Managed: {len(st.session_state.completed)} / 13</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.write("##")
-    st.subheader("📋 Full Forensic Log Summary")
+    st.subheader("📋 Forensic Decision Log")
+    st.info("Review your decisions below for post-incident analysis.")
 
-    with st.container(border=True):
+    with st.container(height=450, border=True):
         for log in reversed(st.session_state.logs):
             st.markdown(f"<div class='log-entry'>{log}</div>", unsafe_allow_html=True)
 
@@ -284,8 +285,21 @@ if game_finished or is_dead:
             st.session_state.clear()
             st.rerun()
     with col_btn2:
-        log_text = "\n".join(st.session_state.logs)
-        st.download_button("📥 DOWNLOAD REPORT TXT", log_text, "audit_report.txt", use_container_width=True)
+        report_data = "=== CYBER RESILIENCE AUDIT REPORT ===\n"
+        report_data += f"Status: {result_text}\n"
+        report_data += f"Final Resilience: {st.session_state.resilience}%\n"
+        report_data += f"Scenarios Managed: {len(st.session_state.completed)}/13\n"
+        report_data += "=====================================\n\n"
+        report_data += "ACTIVITY TRACE (Newest first):\n"
+        report_data += "\n".join(reversed(st.session_state.logs))
+
+        st.download_button(
+            label="📥 DOWNLOAD AUDIT LOG (TXT)",
+            data=report_data,
+            file_name="cyber_audit_report.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
     st.stop()
 
@@ -353,20 +367,3 @@ else:
                 st.session_state.current_app = None
                 random.seed()
                 st.rerun()
-
-st.write("---")
-with st.expander("📜 LIVE SECURITY LOGS (SOC)", expanded=True):
-    if not st.session_state.logs:
-        st.info("System monitoring... No incidents detected.")
-    else:
-        for log in reversed(st.session_state.logs):
-            st.markdown(f"<div class='log-entry'>**LOG:** {log}</div>", unsafe_allow_html=True)
-
-if st.session_state.logs:
-    log_report = "\n".join(st.session_state.logs)
-    st.download_button(
-        label="📥 Download Security Report (TXT)",
-        data=log_report,
-        file_name="cyber_audit_report.txt",
-        mime="text/plain"
-    )
