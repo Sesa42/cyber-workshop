@@ -1,8 +1,7 @@
 import streamlit as st
 import time
-import random  #
+import random
 from streamlit_autorefresh import st_autorefresh
-# Updated app.py
 
 # ========================================
 # CONSTANTS & CONFIGURATION
@@ -13,7 +12,6 @@ MIN_RESILIENCE = 0
 RESILIENCE_WARNING_THRESHOLD = 50
 COLUMNS_PER_ROW = 5
 LOG_DISPLAY_COUNT = 5
-# Fixing the truncated Outlook email description
 
 # Background image URL
 BG_IMAGE_URL = "https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg"
@@ -37,26 +35,26 @@ def apply_styles() -> None:
     """Apply all CSS styling for the application."""
     st.markdown(f"""
     <style>
-        /* Sfondo principale */
+        /* Main background */
         .stApp {{
             background: url("{BG_IMAGE_URL}");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* CLASSE PER TESTO SU DESKTOP (Icone e Timer) */
+        /* Desktop text (icons and timer) */
         .desktop-text {{
             color: #ffffff !important;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             font-weight: 600;
         }}
 
-        /* CLASSE PER TESTO DENTRO LE FINESTRE (Task) */
+        /* Window text (task) */
         .window-text {{
             color: #0f172a !important;
         }}
 
-        /* FINESTRA TASK */
+        /* Task window */
         .window-container {{
             background: rgba(255, 255, 255, 0.98) !important;
             border-radius: 12px;
@@ -71,7 +69,7 @@ def apply_styles() -> None:
             border-radius: 8px !important;
         }}
         
-        /* FIX: Rende i log scorrevoli se diventano troppi */
+        /* Make logs scrollable */
         .stExpander div[role="ant-design-pro-layout"] {{
             max-height: 300px;
             overflow-y: auto;
@@ -87,7 +85,7 @@ def apply_styles() -> None:
             border-left: 4px solid #0078D4;
         }}
 
-        /* Bottoni */
+        /* Buttons */
         div.stButton > button {{
             background-color: #0078D4 !important;
             color: white !important;
@@ -249,66 +247,48 @@ SCENARIOS = {
 # MAIN APPLICATION LOGIC
 # ========================================
 
-# 1. Inizializzazione
 init_session_state()
 update_timer()
 apply_styles()
 
-# 2. Controllo Stato Finale
-all_tasks_done = len(st.session_state.completed) == len(SCENARIOS)
+all_tasks_done = len(st.session_state.completed) >= len(SCENARIOS)
 game_finished = st.session_state.remaining <= 0 or all_tasks_done
-is_dead = st.session_state.resilience <= MIN_RESILIENCE
+is_dead = st.session_state.resilience <= 0
 
-# --- SCENARIO A: VISUALIZZAZIONE RISULTATI (Audit Finale) ---
 if game_finished or is_dead:
-    if st.session_state.resilience > RESILIENCE_WARNING_THRESHOLD and not is_dead:
-        st.balloons()
+    st.empty()
 
-    st.markdown('<div class="window-container"><h1 class="window-text" style="text-align:center;">📊 AUDIT DI SICUREZZA COMPLETATO</h1></div>', unsafe_allow_html=True)
+    passed = st.session_state.resilience > 50
+    result_text = "OVERALL AUDIT: PASSED ✅" if passed else "OVERALL AUDIT: FAILED ❌"
+    result_color = "#28a745" if passed else "#dc3545"
 
-    c_res, c_task = st.columns(2)
-    with c_res:
-        passed = st.session_state.resilience > RESILIENCE_WARNING_THRESHOLD and not is_dead
-        res_status = "PASSED ✅" if passed else "FAILED ❌"
-        res_color = "#00ff00" if passed else "#ff4b4b"
-        st.markdown(f"""
-            <div style='text-align:center; background:rgba(255,255,255,0.1); padding:20px; border-radius:15px;'>
-                <h2 class='window-text'>Risultato</h2>
-                <h1 style='color:{res_color}; font-size:48px;'>{res_status}</h1>
-                <h3 class='window-text'>Resilienza Finale: {st.session_state.resilience}%</h3>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with c_task:
-        perc = int(len(st.session_state.completed) / len(SCENARIOS) * 100)
-        st.markdown(f"""
-            <div style='text-align:center; background:rgba(255,255,255,0.1); padding:20px; border-radius:15px;'>
-                <h2 class='window-text'>Copertura Task</h2>
-                <h1 class='window-text' style='font-size:48px;'>{perc}%</h1>
-                <h3 class='window-text'>{len(st.session_state.completed)}/13 Scenari Gestiti</h3>
-            </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="background: white; padding: 30px; border-radius: 15px; border-top: 40px solid {result_color}; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h1 style="color: {result_color}; margin-top: 0;">{result_text}</h1>
+        <h2 style="color: #333;">Final Resilience: {st.session_state.resilience}%</h2>
+        <p style="color: #666; font-size: 18px;">Scenarios Managed: {len(st.session_state.completed)} / 13</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.write("##")
-    st.write("### 📝 Sommario Attività (Blackbox Audit Log)")
-    for log in reversed(st.session_state.logs):
-        st.markdown(f"<div class='log-entry'>{log}</div>", unsafe_allow_html=True)
+    st.subheader("📋 Full Forensic Log Summary")
+
+    with st.container(border=True):
+        for log in reversed(st.session_state.logs):
+            st.markdown(f"<div class='log-entry'>{log}</div>", unsafe_allow_html=True)
 
     st.write("---")
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        if st.button("🔄 RIAVVIA WORKSHOP", use_container_width=True):
+        if st.button("🔄 RESTART WORKSHOP", use_container_width=True):
             st.session_state.clear()
             st.rerun()
     with col_btn2:
         log_text = "\n".join(st.session_state.logs)
-        st.download_button("📥 SCARICA REPORT TXT", log_text, "audit_report.txt", use_container_width=True)
+        st.download_button("📥 DOWNLOAD REPORT TXT", log_text, "audit_report.txt", use_container_width=True)
 
-    st.stop()  # CRITICO: Ferma l'esecuzione qui per non disegnare il desktop sotto i risultati
+    st.stop()
 
-# --- SCENARIO B: GIOCO IN CORSO (DESKTOP UI) ---
-
-# 1. Barra di Stato Superiore
 c1, c2, c3 = st.columns([1.5, 2, 1])
 with c1:
     st.markdown(f"""
@@ -327,13 +307,10 @@ with c3:
         st.session_state.current_app = None
         st.rerun()
 
-# 2. Barra di Avanzamento Temporale
 progress_value = max(0, min(int((TOTAL_TIME - st.session_state.remaining) / TOTAL_TIME * 100), 100))
 st.progress(progress_value)
 
-# 3. Renderizzazione Contenuto Principale
 if st.session_state.current_app is None:
-    # Mostra Desktop con icone
     st.write("##")
     cols = st.columns(COLUMNS_PER_ROW)
     for i, (key, val) in enumerate(SCENARIOS.items()):
@@ -350,7 +327,6 @@ if st.session_state.current_app is None:
                 st.session_state.current_app = key
                 st.rerun()
 else:
-    # Mostra Finestra della Task attiva
     app_id = st.session_state.current_app
     app_data = SCENARIOS[app_id]
     st.markdown(f"""
@@ -363,7 +339,6 @@ else:
 
     col_a, col_b = st.columns(2)
 
-    # Logica Randomizzazione Risposte
     action_indices = list(range(len(app_data["actions"])))
     random.seed(st.session_state.current_app)
     random.shuffle(action_indices)
@@ -376,23 +351,21 @@ else:
                 st.session_state.logs.append(action["log"])
                 st.session_state.completed.add(app_id)
                 st.session_state.current_app = None
-                random.seed()  # Reset seed
+                random.seed()
                 st.rerun()
 
-# 4. Expander dei Log SOC (Sempre visibile durante il gioco)
 st.write("---")
 with st.expander("📜 LIVE SECURITY LOGS (SOC)", expanded=True):
     if not st.session_state.logs:
-        st.info("Sistema in monitoraggio... Nessun incidente rilevato.")
+        st.info("System monitoring... No incidents detected.")
     else:
         for log in reversed(st.session_state.logs):
             st.markdown(f"<div class='log-entry'>**LOG:** {log}</div>", unsafe_allow_html=True)
 
-# 5. Bottone di Download (Sempre disponibile a fondo pagina)
 if st.session_state.logs:
     log_report = "\n".join(st.session_state.logs)
     st.download_button(
-        label="📥 Scarica Report Sicurezza (TXT)",
+        label="📥 Download Security Report (TXT)",
         data=log_report,
         file_name="cyber_audit_report.txt",
         mime="text/plain"
