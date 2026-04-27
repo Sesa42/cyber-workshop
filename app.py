@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import random  # <--- Aggiungi questa riga in alto
 from streamlit_autorefresh import st_autorefresh
 # Updated app.py
 
@@ -328,17 +329,29 @@ else:
     </div>
 """, unsafe_allow_html=True)
 
-    # Action buttons
+    # Action buttons (RANDOMIZZATI)
     col_a, col_b = st.columns(2)
-    for idx, action in enumerate(app_data["actions"]):
-        with [col_a, col_b][idx]:
-            if st.button(action["l"], key=f"act_{idx}", use_container_width=True):
+    
+    # Creiamo una lista di indici (0, 1) e la mescoliamo
+    action_indices = list(range(len(app_data["actions"])))
+    
+    # Usiamo il nome dell'app come 'seed' per mantenere la posizione 
+    # fissa finché la finestra è aperta, altrimenti cambierebbe ad ogni secondo del timer!
+    random.seed(st.session_state.current_app)
+    random.shuffle(action_indices)
+    
+    for i, idx in enumerate(action_indices):
+        action = app_data["actions"][idx]
+        with [col_a, col_b][i]:
+            if st.button(action["l"], key=f"act_{app_id}_{idx}", use_container_width=True):
                 st.session_state.resilience = max(
                     MIN_RESILIENCE, min(MAX_RESILIENCE, st.session_state.resilience + action["e"])
                 )
                 st.session_state.logs.append(action["log"])
                 st.session_state.completed.add(app_id)
                 st.session_state.current_app = None
+                # Resettiamo il seed per evitare interferenze future
+                random.seed() 
                 st.rerun()
 
 # ========================================
