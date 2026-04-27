@@ -6,14 +6,13 @@ from streamlit_autorefresh import st_autorefresh
 # ========================================
 # CONSTANTS & CONFIGURATION
 # ========================================
-TOTAL_TIME = 180  # Total time in seconds
+TOTAL_TIME = 180
 MAX_RESILIENCE = 100
 MIN_RESILIENCE = 0
 RESILIENCE_WARNING_THRESHOLD = 50
 COLUMNS_PER_ROW = 5
 LOG_DISPLAY_COUNT = 5
 
-# Background image URL
 BG_IMAGE_URL = "https://4kwallpapers.com/images/wallpapers/windows-11-stock-official-blue-background-3840x2160-5630.jpg"
 
 # ========================================
@@ -25,7 +24,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Auto-refresh every second
 st_autorefresh(interval=1000, key="timer")
 
 # ========================================
@@ -35,26 +33,22 @@ def apply_styles() -> None:
     """Apply all CSS styling for the application."""
     st.markdown(f"""
     <style>
-        /* Main background */
         .stApp {{
             background: url("{BG_IMAGE_URL}");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* Desktop text (icons and timer) */
         .desktop-text {{
             color: #ffffff !important;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             font-weight: 600;
         }}
 
-        /* Window text (task) */
         .window-text {{
             color: #0f172a !important;
         }}
 
-        /* Task window */
         .window-container {{
             background: rgba(255, 255, 255, 0.98) !important;
             border-radius: 12px;
@@ -63,13 +57,11 @@ def apply_styles() -> None:
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }}
 
-        /* LIVE LOGS (SOC) */
         .stExpander {{
             background-color: rgba(255, 255, 255, 0.9) !important;
             border-radius: 8px !important;
         }}
         
-        /* Make logs scrollable */
         .stExpander div[role="ant-design-pro-layout"] {{
             max-height: 300px;
             overflow-y: auto;
@@ -85,7 +77,6 @@ def apply_styles() -> None:
             border-left: 4px solid #0078D4;
         }}
 
-        /* Buttons */
         div.stButton > button {{
             background-color: #0078D4 !important;
             color: white !important;
@@ -93,6 +84,17 @@ def apply_styles() -> None:
         }}
     </style>
     """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <style>
+        .section-header {
+            color: #ffffff !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
 # ========================================
 # SESSION STATE INITIALIZATION
 # ========================================
@@ -105,6 +107,7 @@ def init_session_state() -> None:
         "remaining": TOTAL_TIME,
         "last_update": time.time(),
         "completed": set(),
+        "correct_answers": 0,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -266,13 +269,13 @@ if game_finished or is_dead:
     <div style="background: white; padding: 30px; border-radius: 15px; border-top: 40px solid {result_color}; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <h1 style="color: {result_color}; margin-top: 0;">{result_text}</h1>
         <h2 style="color: #333;">Final Resilience Score: {st.session_state.resilience}%</h2>
-        <p style="color: #666; font-size: 18px;">Scenarios Successfully Managed: {len(st.session_state.completed)} / 13</p>
+        <p style="color: #666; font-size: 18px;">Correct Decisions: {st.session_state.correct_answers} / {len(st.session_state.completed)}</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.write("##")
-    st.subheader("📋 Forensic Decision Log")
-    st.info("Review your decisions below for post-incident analysis.")
+    st.markdown("### :white[📋 Forensic Decision Log]")
+    st.markdown(":white[Review your decisions below for post-incident analysis.]")
 
     with st.container(height=450, border=True):
         for log in reversed(st.session_state.logs):
@@ -364,6 +367,8 @@ else:
                 st.session_state.resilience = max(0, min(100, st.session_state.resilience + action["e"]))
                 st.session_state.logs.append(action["log"])
                 st.session_state.completed.add(app_id)
+                if action["e"] > 0:
+                    st.session_state.correct_answers += 1
                 st.session_state.current_app = None
                 random.seed()
                 st.rerun()
