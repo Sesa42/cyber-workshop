@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-import random  # <--- Aggiungi questa riga in alto
+import random  #
 from streamlit_autorefresh import st_autorefresh
 # Updated app.py
 
@@ -34,8 +34,10 @@ st_autorefresh(interval=1000, key="timer")
 # UNIFIED STYLING
 # ========================================
 def apply_styles() -> None:
+    """Apply all CSS styling for the application."""
     st.markdown(f"""
     <style>
+        /* Sfondo principale */
         .stApp {{
             background: url("{BG_IMAGE_URL}");
             background-size: cover;
@@ -69,11 +71,17 @@ def apply_styles() -> None:
             border-radius: 8px !important;
         }}
         
+        /* FIX: Rende i log scorrevoli se diventano troppi */
+        .stExpander div[role="ant-design-pro-layout"] {{
+            max-height: 300px;
+            overflow-y: auto;
+        }}
+
         .log-entry {{
             color: #1e293b !important;
             font-family: 'Courier New', Courier, monospace;
             background: #f1f5f9;
-            padding: 5px;
+            padding: 8px;
             border-radius: 4px;
             margin-bottom: 5px;
             border-left: 4px solid #0078D4;
@@ -83,10 +91,10 @@ def apply_styles() -> None:
         div.stButton > button {{
             background-color: #0078D4 !important;
             color: white !important;
+            font-weight: 600 !important;
         }}
     </style>
     """, unsafe_allow_html=True)
-
 # ========================================
 # SESSION STATE INITIALIZATION
 # ========================================
@@ -238,21 +246,71 @@ SCENARIOS = {
 }
 
 # ========================================
-# MAIN APPLICATION
+# MAIN APPLICATION LOGIC
 # ========================================
 
-# Initialize session state and styling
+# 1. Inizializzazione
 init_session_state()
 update_timer()
 apply_styles()
 
-# ========================================
-# STATUS BAR
-# ========================================
-c1, c2, c3 = st.columns([1.5, 2, 1])
+# 2. Controllo Stato Finale
+all_tasks_done = len(st.session_state.completed) == len(SCENARIOS)
+game_finished = st.session_state.remaining <= 0 or all_tasks_done
+is_dead = st.session_state.resilience <= MIN_RESILIENCE
 
+# --- SCENARIO A: VISUALIZZAZIONE RISULTATI (Audit Finale) ---
+if game_finished or is_dead:
+    if st.session_state.resilience > RESILIENCE_WARNING_THRESHOLD and not is_dead:
+        st.balloons()
+
+    st.markdown('<div class="window-container"><h1 class="window-text" style="text-align:center;">📊 AUDIT DI SICUREZZA COMPLETATO</h1></div>', unsafe_allow_html=True)
+
+    c_res, c_task = st.columns(2)
+    with c_res:
+        passed = st.session_state.resilience > RESILIENCE_WARNING_THRESHOLD and not is_dead
+        res_status = "PASSED ✅" if passed else "FAILED ❌"
+        res_color = "#00ff00" if passed else "#ff4b4b"
+        st.markdown(f"""
+            <div style='text-align:center; background:rgba(255,255,255,0.1); padding:20px; border-radius:15px;'>
+                <h2 class='window-text'>Risultato</h2>
+                <h1 style='color:{res_color}; font-size:48px;'>{res_status}</h1>
+                <h3 class='window-text'>Resilienza Finale: {st.session_state.resilience}%</h3>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with c_task:
+        perc = int(len(st.session_state.completed) / len(SCENARIOS) * 100)
+        st.markdown(f"""
+            <div style='text-align:center; background:rgba(255,255,255,0.1); padding:20px; border-radius:15px;'>
+                <h2 class='window-text'>Copertura Task</h2>
+                <h1 class='window-text' style='font-size:48px;'>{perc}%</h1>
+                <h3 class='window-text'>{len(st.session_state.completed)}/13 Scenari Gestiti</h3>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.write("##")
+    st.write("### 📝 Sommario Attività (Blackbox Audit Log)")
+    for log in reversed(st.session_state.logs):
+        st.markdown(f"<div class='log-entry'>{log}</div>", unsafe_allow_html=True)
+
+    st.write("---")
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🔄 RIAVVIA WORKSHOP", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+    with col_btn2:
+        log_text = "\n".join(st.session_state.logs)
+        st.download_button("📥 SCARICA REPORT TXT", log_text, "audit_report.txt", use_container_width=True)
+
+    st.stop()  # CRITICO: Ferma l'esecuzione qui per non disegnare il desktop sotto i risultati
+
+# --- SCENARIO B: GIOCO IN CORSO (DESKTOP UI) ---
+
+# 1. Barra di Stato Superiore
+c1, c2, c3 = st.columns([1.5, 2, 1])
 with c1:
-    # Aggiungi un background semitrasparente al div del timer
     st.markdown(f"""
         <div class='desktop-text' style='background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; font-size: 24px; font-weight: bold; text-align: center;'>
             ⏳ TIME: {st.session_state.remaining}s
@@ -260,107 +318,82 @@ with c1:
     """, unsafe_allow_html=True)
 
 with c2:
-    res_color = "#00ff00" if st.session_state.resilience > RESILIENCE_WARNING_THRESHOLD else "#ff4b4b"
-    st.markdown(f"<h3 style='text-align:center;color:{res_color}'>🛡️ RESILIENCE: {st.session_state.resilience}%</h3>", unsafe_allow_html=True)
+    curr_res = st.session_state.resilience
+    color = "#00ff00" if curr_res > RESILIENCE_WARNING_THRESHOLD else "#ff4b4b"
+    st.markdown(f"<h3 style='text-align:center;color:{color}'>🛡️ RESILIENCE: {curr_res}%</h3>", unsafe_allow_html=True)
 
 with c3:
     if st.button("🏠 DESKTOP", use_container_width=True):
         st.session_state.current_app = None
         st.rerun()
 
-# Progress bar
+# 2. Barra di Avanzamento Temporale
 progress_value = max(0, min(int((TOTAL_TIME - st.session_state.remaining) / TOTAL_TIME * 100), 100))
 st.progress(progress_value)
 
-# ========================================
-# GAME OVER LOGIC
-# ========================================
-if st.session_state.resilience <= MIN_RESILIENCE:
-    st.error("🚨 CRITICAL BREACH: Your company has been liquidated due to cyber failure.")
-    if st.button("REBOOT SYSTEM"):
-        st.session_state.clear()
-        st.rerun()
-    st.stop()
-
-if st.session_state.remaining <= 0:
-    st.warning("⏱️ TIME EXPIRED: The audit is over.")
-    st.info(f"Final Resilience Score: {st.session_state.resilience}%")
-    if st.button("REPLAY"):
-        st.session_state.clear()
-        st.rerun()
-    st.stop()
-
-# ========================================
-# DESKTOP UI
-# ========================================
+# 3. Renderizzazione Contenuto Principale
 if st.session_state.current_app is None:
+    # Mostra Desktop con icone
     st.write("##")
     cols = st.columns(COLUMNS_PER_ROW)
-
     for i, (key, val) in enumerate(SCENARIOS.items()):
         with cols[i % COLUMNS_PER_ROW]:
-            st.markdown(
-                f"""
-                <div class="desktop-icon">
-                    <div class="icon-box">{val['icon']}</div>
-                    <div class="desktop-text">{val['title']}</div>
+            st.markdown(f"""
+                <div style='text-align:center; margin-bottom:10px;'>
+                    <div style='font-size:50px;'>{val['icon']}</div>
+                    <div class='desktop-text'>{val['title']}</div>
                 </div>
-            """,
-                unsafe_allow_html=True,
-            )
+            """, unsafe_allow_html=True)
 
-            label = "✅ Done" if key in st.session_state.completed else "Open"
-            if st.button(label, key=f"btn_{key}", use_container_width=True):
+            btn_label = "✅ Done" if key in st.session_state.completed else "Open"
+            if st.button(btn_label, key=f"btn_{key}", use_container_width=True):
                 st.session_state.current_app = key
                 st.rerun()
-
-# ========================================
-# APP WINDOW (MODAL SIMULATION)
-# ========================================
 else:
+    # Mostra Finestra della Task attiva
     app_id = st.session_state.current_app
     app_data = SCENARIOS[app_id]
-
     st.markdown(f"""
     <div class="window-container">
         <h2 class="window-text" style="margin-top:-10px">{app_data['icon']} {app_data['title']} Task</h2>
         <hr>
         <p class="window-text" style="font-size:18px;"><b>Challenge:</b> {app_data['desc']}</p>
     </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    # Action buttons (RANDOMIZZATI)
     col_a, col_b = st.columns(2)
-    
-    # Creiamo una lista di indici (0, 1) e la mescoliamo
+
+    # Logica Randomizzazione Risposte
     action_indices = list(range(len(app_data["actions"])))
-    
-    # Usiamo il nome dell'app come 'seed' per mantenere la posizione 
-    # fissa finché la finestra è aperta, altrimenti cambierebbe ad ogni secondo del timer!
     random.seed(st.session_state.current_app)
     random.shuffle(action_indices)
-    
+
     for i, idx in enumerate(action_indices):
         action = app_data["actions"][idx]
         with [col_a, col_b][i]:
             if st.button(action["l"], key=f"act_{app_id}_{idx}", use_container_width=True):
-                st.session_state.resilience = max(
-                    MIN_RESILIENCE, min(MAX_RESILIENCE, st.session_state.resilience + action["e"])
-                )
+                st.session_state.resilience = max(0, min(100, st.session_state.resilience + action["e"]))
                 st.session_state.logs.append(action["log"])
                 st.session_state.completed.add(app_id)
                 st.session_state.current_app = None
-                # Resettiamo il seed per evitare interferenze future
-                random.seed() 
+                random.seed()  # Reset seed
                 st.rerun()
 
-# ========================================
-# SYSTEM LOGS
-# ========================================
+# 4. Expander dei Log SOC (Sempre visibile durante il gioco)
 st.write("---")
 with st.expander("📜 LIVE SECURITY LOGS (SOC)", expanded=True):
     if not st.session_state.logs:
-        st.info("Monitoring system... No incidents recorded yet.")
+        st.info("Sistema in monitoraggio... Nessun incidente rilevato.")
     else:
-        for log in reversed(st.session_state.logs[-LOG_DISPLAY_COUNT:]):
+        for log in reversed(st.session_state.logs):
             st.markdown(f"<div class='log-entry'>**LOG:** {log}</div>", unsafe_allow_html=True)
+
+# 5. Bottone di Download (Sempre disponibile a fondo pagina)
+if st.session_state.logs:
+    log_report = "\n".join(st.session_state.logs)
+    st.download_button(
+        label="📥 Scarica Report Sicurezza (TXT)",
+        data=log_report,
+        file_name="cyber_audit_report.txt",
+        mime="text/plain"
+    )
