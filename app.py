@@ -33,77 +33,56 @@ st_autorefresh(interval=1000, key="timer")
 # UNIFIED STYLING
 # ========================================
 def apply_styles() -> None:
-    """Apply all CSS styling for the application."""
     st.markdown(f"""
     <style>
-        /* Sfondo principale */
         .stApp {{
             background: url("{BG_IMAGE_URL}");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* Overlay scuro per far risaltare le icone */
-        [data-testid="stAppViewContainer"] > .main {{
-            background: rgba(0, 0, 0, 0.3);
-        }}
-
-        /* TESTO GENERALE: Bianco solo fuori dai container bianchi */
-        [data-testid="stAppViewContainer"] .stMarkdown p, 
-        [data-testid="stAppViewContainer"] h1, 
-        [data-testid="stAppViewContainer"] h2, 
-        [data-testid="stAppViewContainer"] h3, 
-        [data-testid="stAppViewContainer"] label {{
+        /* CLASSE PER TESTO SU DESKTOP (Icone e Timer) */
+        .desktop-text {{
             color: #ffffff !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-weight: 600;
         }}
 
-        /* WINDOW CONTAINER: Forziamo tutto il testo interno in nero/scuro */
-        .window-container, .window-container * {{
+        /* CLASSE PER TESTO DENTRO LE FINESTRE (Task) */
+        .window-text {{
             color: #0f172a !important;
-            fill: #0f172a !important;
-        }}
-        
-        .window-container {{
-            background: rgba(255, 255, 255, 0.95) !important;
-            border-radius: 12px;
-            padding: 30px;
-            margin-top: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border-top: 35px solid #e2e8f0;
         }}
 
-        /* LOGS (EXPANDER): Rendiamolo solido e leggibile */
-        .streamlit-expanderHeader {{
-            background-color: white !important;
+        /* FINESTRA TASK */
+        .window-container {{
+            background: rgba(255, 255, 255, 0.98) !important;
+            border-radius: 12px;
+            padding: 25px;
+            border-top: 35px solid #e2e8f0;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }}
+
+        /* LIVE LOGS (SOC) */
+        .stExpander {{
+            background-color: rgba(255, 255, 255, 0.9) !important;
             border-radius: 8px !important;
         }}
         
-        .streamlit-expanderHeader span, .streamlit-expanderHeader p {{
-            color: #000000 !important;
+        .log-entry {{
+            color: #1e293b !important;
+            font-family: 'Courier New', Courier, monospace;
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            border-left: 4px solid #0078D4;
         }}
 
-        .streamlit-expanderContent {{
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            border-radius: 0 0 8px 8px !important;
-            padding: 20px !important;
-        }}
-
-        .streamlit-expanderContent * {{
-            color: #000000 !important;
-            fill: #000000 !important;
-        }}
-
-        /* Bottoni stile Outlook */
+        /* Bottoni */
         div.stButton > button {{
             background-color: #0078D4 !important;
             color: white !important;
-            border: none !important;
-            font-weight: 600 !important;
         }}
-
-        /* Desktop Icons */
-        .icon-box {{ font-size: 55px; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }}
-        .icon-label {{ font-weight: 500; text-shadow: 2px 2px 4px #000; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -272,14 +251,16 @@ apply_styles()
 c1, c2, c3 = st.columns([1.5, 2, 1])
 
 with c1:
-    st.markdown(f"### ⏳ TIME: {st.session_state.remaining}s")
+    # Aggiungi un background semitrasparente al div del timer
+    st.markdown(f"""
+        <div class='desktop-text' style='background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; font-size: 24px; font-weight: bold; text-align: center;'>
+            ⏳ TIME: {st.session_state.remaining}s
+        </div>
+    """, unsafe_allow_html=True)
 
 with c2:
     res_color = "#00ff00" if st.session_state.resilience > RESILIENCE_WARNING_THRESHOLD else "#ff4b4b"
-    st.markdown(
-        f"<h3 style='text-align:center;color:{res_color}'>🛡️ RESILIENCE: {st.session_state.resilience}%</h3>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"<h3 style='text-align:center;color:{res_color}'>🛡️ RESILIENCE: {st.session_state.resilience}%</h3>", unsafe_allow_html=True)
 
 with c3:
     if st.button("🏠 DESKTOP", use_container_width=True):
@@ -321,7 +302,7 @@ if st.session_state.current_app is None:
                 f"""
                 <div class="desktop-icon">
                     <div class="icon-box">{val['icon']}</div>
-                    <div class="icon-label">{val['title']}</div>
+                    <div class="desktop-text">{val['title']}</div>
                 </div>
             """,
                 unsafe_allow_html=True,
@@ -339,16 +320,13 @@ else:
     app_id = st.session_state.current_app
     app_data = SCENARIOS[app_id]
 
-    st.markdown(
-        f"""
-        <div class="window-container">
-            <h2 style="margin-top:-10px">{app_data['icon']} {app_data['title']} Task</h2>
-            <hr style="border: 0.5px solid #cbd5e1">
-            <p style="font-size:18px; line-height:1.6"><b>Challenge:</b> {app_data['desc']}</p>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"""
+    <div class="window-container">
+        <h2 class="window-text" style="margin-top:-10px">{app_data['icon']} {app_data['title']} Task</h2>
+        <hr>
+        <p class="window-text" style="font-size:18px;"><b>Challenge:</b> {app_data['desc']}</p>
+    </div>
+""", unsafe_allow_html=True)
 
     # Action buttons
     col_a, col_b = st.columns(2)
@@ -372,4 +350,4 @@ with st.expander("📜 LIVE SECURITY LOGS (SOC)", expanded=True):
         st.info("Monitoring system... No incidents recorded yet.")
     else:
         for log in reversed(st.session_state.logs[-LOG_DISPLAY_COUNT:]):
-            st.markdown(f"**LOG:** `{log}`")
+            st.markdown(f"<div class='log-entry'>**LOG:** {log}</div>", unsafe_allow_html=True)
