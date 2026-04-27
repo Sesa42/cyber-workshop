@@ -48,9 +48,41 @@ def apply_styles() -> None:
             background: rgba(0, 0, 0, 0.2);
         }}
 
-        /* Global Text Visibility */
-        .stMarkdown, p, h1, h2, h3, span, label, .stText {{
+        /* Global Text Visibility - Solo per il corpo principale */
+        [data-testid="stAppViewContainer"] .stMarkdown,
+        [data-testid="stAppViewContainer"] p,
+        [data-testid="stAppViewContainer"] h1,
+        [data-testid="stAppViewContainer"] h2,
+        [data-testid="stAppViewContainer"] h3,
+        [data-testid="stAppViewContainer"] span,
+        [data-testid="stAppViewContainer"] label {{
             color: #ffffff !important;
+        }}
+
+        /* Ripristina visibilità per i Log e i messaggi di sistema */
+        .stAlert p, .stExpander details, .stCode blockcode {{
+            color: #000000 !important;
+        }}
+
+        /* Forza il colore nero specifico per il widget di info */
+        div[data-testid="stNotification"] p {{
+            color: #1e3a8a !important;
+        }}
+
+        /* Rendi l'expander leggibile */
+        .streamlit-expanderHeader {{
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #000000 !important;
+            border-radius: 8px;
+        }}
+        .streamlit-expanderContent {{
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            color: #000000 !important;
+        }}
+
+        /* Migliora lo spacing dentro l'expander dei log */
+        .streamlit-expanderContent div {{
+            margin-bottom: 5px;
         }}
 
         /* Desktop Icons */
@@ -166,7 +198,7 @@ SCENARIOS = {
         ],
     },
     "teams": {
-        "icon": "💬",
+        "icon": "👥",
         "title": "Teams",
         "desc": "IT Admin 'Mark' messages you: 'We are testing the new firewall. Click this internal link to confirm your workstation is reachable.' Link: 'https://internal-dev-check.io/ping'.",
         "actions": [
@@ -202,7 +234,7 @@ SCENARIOS = {
         ],
     },
     "update": {
-        "icon": "⚙️",
+        "icon": "🔁",
         "title": "Updates",
         "desc": "A browser tab says: 'Chrome Outdated. Update now to view this content.' and downloads 'Update.dmg' or 'Update.exe' automatically.",
         "actions": [
@@ -247,7 +279,7 @@ SCENARIOS = {
         ],
     },
     "password": {
-        "icon": "📝",
+        "icon": "🔐",
         "title": "Password Policy",
         "desc": "You need a new password. Which strategy is harder for a modern computer to crack?",
         "actions": [
@@ -372,4 +404,4 @@ with st.expander("📜 LIVE SECURITY LOGS (SOC)", expanded=True):
         st.info("Monitoring system... No incidents recorded yet.")
     else:
         for log in reversed(st.session_state.logs[-LOG_DISPLAY_COUNT:]):
-            st.code(log)
+            st.markdown(f"**LOG:** `{log}`")
